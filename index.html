@@ -1,708 +1,1120 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>作業指示フォーム｜株式会社A</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <style>
-    :root {
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --primary: #1a4a7a;
-      --primary-light: #2563a8;
-      --accent: #e85d2f;
-      --accent-light: #ff7a52;
-      --text: #1a2433;
-      --text-sub: #5a6a7a;
-      --border: #d0dce8;
-      --input-bg: #f8fafc;
-      --success: #1a9e5c;
-      --shadow: 0 4px 24px rgba(26,74,122,0.10);
-      --radius: 14px;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>テナント管理｜カニエ電機株式会社</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d2b4e'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-size='38' font-family='serif' fill='white'%3E%E9%9B%BB%3C/text%3E%3C/svg%3E"/>
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, getDoc, collection,
+  onSnapshot, query, where, deleteDoc, addDoc, getDocs, orderBy, limit, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 0 48px;
-    }
+const firebaseConfig = {
+  apiKey: "AIzaSyBY1hisEWTccBZxEDP7cBl8_CnJrCaJ2hM",
+  authDomain: "kanie-b23cb.firebaseapp.com",
+  projectId: "kanie-b23cb",
+  storageBucket: "kanie-b23cb.firebasestorage.app",
+  messagingSenderId: "1073759973109",
+  appId: "1:1073759973109:web:c459eec083aa3f3fc65fbc"
+};
+const _app = initializeApp(firebaseConfig);
+const _db  = getFirestore(_app);
+window._db = _db;
+window._fs = { doc, setDoc, getDoc, collection, onSnapshot, query, where, deleteDoc, addDoc, getDocs, orderBy, limit };
+window._fbReady = true;
+document.dispatchEvent(new Event('fb-ready'));
+</script>
 
-    /* ── Header ── */
-    header {
-      width: 100%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      color: #fff;
-      padding: 28px 24px 22px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    header::before {
-      content: '';
-      position: absolute;
-      top: -40px; right: -40px;
-      width: 160px; height: 160px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 50%;
-    }
-    header::after {
-      content: '';
-      position: absolute;
-      bottom: -30px; left: -20px;
-      width: 120px; height: 120px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 50%;
-    }
-    .header-badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: rgba(255,255,255,0.9);
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 4px 14px;
-      border-radius: 99px;
-      margin-bottom: 10px;
-      font-weight: 400;
-    }
-    header h1 {
-      font-family: 'Zen Kaku Gothic New', sans-serif;
-      font-size: clamp(20px, 5vw, 26px);
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-    header p {
-      font-size: 13px;
-      color: rgba(255,255,255,0.75);
-      margin-top: 6px;
-    }
+<style>
+/* ══════════════════════════════════════════════
+   KANIE TENANT MANAGEMENT — standalone admin page
+   (CSS vars match index_web_v6.html exactly)
+══════════════════════════════════════════════ */
+:root{
+  --navy:#0d2b4e;--navy2:#1a3f6b;--navy3:#0a1f3a;
+  --blue:#2563a8;--blue2:#3b82f6;
+  --orange:#e85d2f;--orange2:#ff7a52;
+  --green:#1a4a2e;--green2:#2d7a4f;--lime:#4ade80;
+  --bg:#eef2f7;--sur:#fff;--sur2:#f5f8fc;--sur3:#ebf0f7;
+  --bdr:#d5dfe8;--bdr2:#c0cfde;
+  --txt:#0d2b4e;--txb:#2d3e52;--txs:#607080;--txl:#8fa3b8;
+  --rad:14px;--rads:9px;
+  --shd:0 4px 24px rgba(13,43,78,.13);--shds:0 2px 10px rgba(13,43,78,.09);
+  --ok:#0f7c4a;--err:#c82020;
+  --ok-bg:#ecfdf5;--err-bg:#fef2f2;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);color:var(--txb);min-height:100%;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:99px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
-    /* ── Card ── */
-    .card {
-      width: min(560px, 94vw);
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 32px 28px 28px;
-      margin-top: 28px;
-    }
+/* ── TOP BAR ── */
+.topbar{position:sticky;top:0;z-index:200;height:56px;background:linear-gradient(135deg,var(--navy3),var(--navy));border-bottom:3px solid var(--orange);display:flex;align-items:center;padding:0 20px;gap:12px;box-shadow:0 2px 16px rgba(13,43,78,.35);}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.tb-name{color:#fff;font-size:14px;font-weight:800;font-family:'Sora',sans-serif;white-space:nowrap;}
+.tb-sub{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;}
+.tb-divider{width:1px;height:28px;background:rgba(255,255,255,.15);}
+.tb-caption{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;font-family:'Sora',sans-serif;white-space:nowrap;}
+.tb-spacer{flex:1;}
+.tb-badge{font-size:12px;background:rgba(232,93,47,.2);color:var(--orange2);border:1px solid rgba(232,93,47,.3);padding:3px 11px;border-radius:99px;font-weight:700;white-space:nowrap;}
+.btn-back{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);padding:5px 13px;border-radius:var(--rads);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px;}
+.btn-back:hover{background:rgba(255,255,255,.18);}
 
-    /* ── Section label ── */
-    .section-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 18px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-    .section-label span.dot {
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: inline-block;
-    }
+/* ── CONTENT ── */
+.content{max-width:960px;margin:0 auto;padding:28px 24px 60px;}
 
-    /* ── Facility row (fixed) ── */
-    .facility-row {
-      display: flex;
-      align-items: center;
-      background: linear-gradient(90deg, #eef4fb, #f8fafc);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 18px;
-      margin-bottom: 24px;
-      gap: 10px;
-    }
-    .facility-tag {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--primary);
-      background: rgba(26,74,122,0.1);
-      padding: 3px 10px;
-      border-radius: 99px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-    .facility-name {
-      font-family: 'Zen Kaku Gothic New', sans-serif;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text);
-    }
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:22px;}
+.ph h1{font-size:24px;font-weight:800;color:var(--navy);font-family:'Sora',sans-serif;display:flex;align-items:center;gap:10px;}
+.ph p{font-size:13px;color:var(--txs);margin-top:4px;}
+.ph-line{height:3px;width:40px;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:2px;margin-top:10px;}
 
-    /* ── Form groups ── */
-    .form-group {
-      margin-bottom: 22px;
-    }
-    label.field-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 10px;
-    }
-    label.field-label .req {
-      font-size: 10px;
-      background: var(--accent);
-      color: #fff;
-      padding: 2px 7px;
-      border-radius: 99px;
-      font-weight: 700;
-    }
-    label.field-label .opt {
-      font-size: 10px;
-      background: #e0e8f0;
-      color: var(--text-sub);
-      padding: 2px 7px;
-      border-radius: 99px;
-      font-weight: 500;
-    }
+/* ── SECTION ── */
+.section-title{font-size:12px;font-weight:700;color:var(--txl);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 
-    /* Radio group */
-    .radio-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .radio-btn {
-      flex: 1;
-      min-width: 100px;
-    }
-    .radio-btn input[type="radio"] { display: none; }
-    .radio-btn label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 11px 16px;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-sub);
-      background: var(--input-bg);
-      transition: all 0.18s ease;
-      user-select: none;
-    }
-    .radio-btn input[type="radio"]:checked + label {
-      border-color: var(--primary);
-      background: #eef4fb;
-      color: var(--primary);
-      font-weight: 700;
-      box-shadow: 0 2px 10px rgba(26,74,122,0.12);
-    }
-    .radio-btn label:hover {
-      border-color: var(--primary-light);
-      color: var(--primary);
-    }
+/* ── TENANT GRID ── */
+.tenant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:28px;}
+.tenant-card{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:18px;box-shadow:var(--shds);
+  animation:fadeUp .25s ease;
+  border-top:4px solid var(--bdr);
+  transition:box-shadow .2s;
+}
+.tenant-card:hover{box-shadow:var(--shd);}
+.tenant-card.active{border-top-color:var(--ok);}
+.tenant-card.inactive{border-top-color:#e5e7eb;}
+.tc-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.tc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tc-name{font-size:15px;font-weight:700;color:var(--navy);}
+.tc-id{font-size:10px;color:var(--txl);font-family:monospace;margin-top:1px;}
+.tc-url{
+  display:flex;align-items:center;gap:6px;
+  background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--rads);
+  padding:7px 10px;margin-bottom:10px;font-size:11.5px;
+  font-family:monospace;color:var(--txs);word-break:break-all;
+}
+.tc-url-icon{font-size:12px;flex-shrink:0;}
+.btn-copy{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.btn-copy:hover{background:var(--blue);}
 
-    /* Checkbox group for 機器 */
-    .device-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .device-item { }
-    .device-item input[type="checkbox"] { display: none; }
-    .device-item label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 11px 14px;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-sub);
-      background: var(--input-bg);
-      transition: all 0.18s ease;
-      user-select: none;
-    }
-    .device-item input[type="checkbox"]:checked + label {
-      border-color: var(--primary);
-      background: #eef4fb;
-      color: var(--primary);
-      font-weight: 700;
-    }
-    .device-item label:hover {
-      border-color: var(--primary-light);
-    }
-    .device-item label .icon {
-      font-size: 20px;
-      line-height: 1;
-    }
-    .check-mark {
-      width: 18px; height: 18px;
-      border: 2px solid var(--border);
-      border-radius: 5px;
-      margin-left: auto;
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-      font-size: 11px;
-      color: transparent;
-    }
-    .device-item input[type="checkbox"]:checked + label .check-mark {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
+/* PIN section */
+.tc-pin{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.pin-display{
+  flex:1;display:flex;align-items:center;gap:6px;
+  background:rgba(13,43,78,.04);border:1.5px dashed rgba(13,43,78,.15);
+  border-radius:var(--rads);padding:8px 11px;
+  font-family:monospace;font-size:16px;font-weight:800;
+  color:var(--navy);letter-spacing:6px;
+}
+.pin-hidden{filter:blur(6px);cursor:pointer;}
+.pin-toggle{background:none;border:none;font-size:16px;cursor:pointer;flex-shrink:0;}
 
-    /* Machine number input (hidden until checked) */
-    .machine-num-wrap {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
-      opacity: 0;
-      margin-top: 0;
-    }
-    .machine-num-wrap.show {
-      max-height: 80px;
-      opacity: 1;
-      margin-top: 8px;
-    }
-    .machine-num-inner {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #f0f6ff;
-      border: 1.5px solid #b8d0ec;
-      border-radius: 9px;
-      padding: 9px 14px;
-    }
-    .machine-num-inner label {
-      font-size: 12px;
-      color: var(--primary);
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .machine-num-inner input {
-      width: 80px;
-      border: 1.5px solid #b8d0ec;
-      border-radius: 7px;
-      padding: 5px 10px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--text);
-      background: #fff;
-      text-align: center;
-    }
-    .machine-num-inner input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    .machine-num-inner span {
-      font-size: 12px;
-      color: var(--text-sub);
-    }
+/* PIN edit */
+.pin-edit-wrap{display:none;flex-direction:column;gap:6px;margin-bottom:10px;}
+.pin-edit-wrap.show{display:flex;}
+.pin-edit-row{display:flex;gap:6px;}
+.pin-input{
+  flex:1;padding:9px 12px;border:2px solid var(--bdr);border-radius:var(--rads);
+  font-size:15px;font-weight:700;font-family:monospace;
+  letter-spacing:4px;text-align:center;outline:none;
+  background:var(--sur2);color:var(--navy);
+}
+.pin-input:focus{border-color:var(--blue);}
+.btn-sm-g{padding:7px 14px;background:var(--ok);color:#fff;border:none;border-radius:var(--rads);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-sm-g:hover{opacity:.9;}
+.btn-sm-c{padding:7px 14px;background:var(--sur2);color:var(--txb);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
 
-    /* Text inputs / textarea */
-    textarea, input[type="text"] {
-      width: 100%;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--text);
-      background: var(--input-bg);
-      resize: vertical;
-      transition: border-color 0.18s;
-    }
-    textarea:focus, input[type="text"]:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: #fff;
-    }
-    textarea { min-height: 90px; line-height: 1.6; }
+/* Device count */
+.tc-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.tc-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--sur2);border:1px solid var(--bdr);color:var(--txs);}
+.tc-chip.ok{background:var(--ok-bg);color:#065f46;border-color:#6ee7b7;}
+.tc-chip.warn{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
+.tc-chip.err{background:var(--err-bg);color:var(--err);border-color:#fca5a5;}
 
-    /* ── Divider ── */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 24px 0;
-    }
+/* Add tenant */
+.add-tenant-card{
+  background:var(--sur);border:2px dashed var(--bdr2);border-radius:var(--rad);
+  padding:18px;display:flex;flex-direction:column;gap:10px;
+  animation:fadeUp .25s ease;
+}
+.add-tenant-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.add-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.add-form-row.full{grid-template-columns:1fr;}
+.fld{display:flex;flex-direction:column;gap:4px;}
+.fld label{font-size:11px;font-weight:700;color:var(--navy);}
+.fld input,.fld select{padding:9px 11px;border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:13px;font-family:inherit;background:var(--sur2);color:var(--txt);outline:none;}
+.fld input:focus,.fld select:focus{border-color:var(--blue);background:#fff;}
+.btn-add{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;border:none;border-radius:var(--rads);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.2s;width:fit-content;}
+.btn-add:hover{transform:translateY(-1px);}
 
-    /* ── Submit button ── */
-    .btn-submit {
-      width: 100%;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 700;
-      font-family: inherit;
-      letter-spacing: 1px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 4px 16px rgba(232,93,47,0.3);
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(232,93,47,0.35);
-    }
-    .btn-submit:active { transform: translateY(0); }
-    .btn-submit:disabled {
-      background: linear-gradient(135deg, #aaa, #ccc);
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .btn-submit .send-icon { font-size: 20px; }
+/* ── REGISTRATION CARDS ── */
+.reg-card{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:16px;margin-bottom:10px;box-shadow:var(--shds);
+  animation:fadeUp .2s ease;border-left:4px solid var(--gold,#f59e0b);
+}
+.reg-card.approved{border-left-color:var(--ok);}
+.reg-card.rejected{border-left-color:var(--err);opacity:.6;}
+.reg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.reg-co{font-size:15px;font-weight:800;color:var(--navy);}
+.reg-full{font-size:11px;color:var(--txs);margin-top:2px;}
+.reg-date{font-size:10.5px;color:var(--txl);white-space:nowrap;}
+.reg-info{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.reg-chip{font-size:11px;background:var(--sur2);border:1px solid var(--bdr);border-radius:99px;padding:3px 10px;color:var(--txs);}
+.reg-pin{font-family:monospace;font-size:14px;font-weight:800;color:var(--navy);letter-spacing:4px;background:rgba(13,43,78,.06);border-radius:6px;padding:3px 10px;}
+.reg-url{font-size:11px;font-family:monospace;color:var(--blue);word-break:break-all;margin-bottom:10px;background:var(--sur2);border-radius:6px;padding:4px 8px;}
+.reg-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.btn-reg-approve{padding:6px 14px;background:var(--ok-bg);color:#065f46;border:1px solid #6ee7b7;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-reg-approve:hover{background:#d1fae5;}
+.btn-reg-reject{padding:6px 14px;background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-reg-reject:hover{background:#fee2e2;}
+.btn-reg-copy{padding:6px 12px;background:var(--sur2);color:var(--txb);border:1px solid var(--bdr);border-radius:var(--rads);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.reg-status-badge{font-size:10px;padding:2px 9px;border-radius:99px;font-weight:700;white-space:nowrap;}
+.rsb-pending{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+.rsb-approved{background:var(--ok-bg);color:#065f46;border:1px solid #6ee7b7;}
+.rsb-rejected{background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;}
 
-    /* ── Toast / Status ── */
-    #toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--success);
-      color: #fff;
-      padding: 14px 28px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      opacity: 0;
-      transition: all 0.35s ease;
-      z-index: 999;
-      text-align: center;
-      min-width: 260px;
-    }
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    #toast.error { background: #c0392b; }
+/* ── DEVICE TABLE ── */
+.device-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.df-btn{padding:6px 14px;border:1.5px solid var(--bdr);border-radius:99px;font-size:12px;font-weight:600;font-family:inherit;background:var(--sur);color:var(--txs);cursor:pointer;transition:.15s;}
+.df-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.dev-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dev-table th{text-align:left;padding:9px 10px;font-size:10.5px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--bdr);background:var(--sur2);}
+.dev-table td{padding:10px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+.dev-table tr:last-child td{border-bottom:none;}
+.dev-table tr:hover td{background:var(--sur2);}
+.dev-id-chip{background:var(--sur2);border:1px solid var(--bdr);border-radius:5px;padding:2px 8px;font-family:monospace;font-size:10.5px;color:var(--txs);}
+.st-allowed{display:inline-flex;align-items:center;gap:4px;background:var(--ok-bg);color:#065f46;border:1px solid #6ee7b7;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:700;}
+.st-blocked{display:inline-flex;align-items:center;gap:4px;background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:700;}
+.st-pending{display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:700;}
+.btn-dev-allow{padding:4px 10px;background:var(--ok-bg);color:#065f46;border:1px solid #6ee7b7;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-dev-allow:hover{background:#d1fae5;}
+.btn-dev-block{padding:4px 10px;background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-dev-block:hover{background:#fee2e2;}
+.btn-dev-del{padding:4px 9px;background:transparent;color:var(--txl);border:1px solid var(--bdr);border-radius:6px;font-size:13px;cursor:pointer;}
+.btn-dev-del:hover{color:var(--err);border-color:#fca5a5;}
+.dev-empty{text-align:center;padding:30px;color:var(--txl);font-size:13px;}
 
-    /* ── Setup banner ── */
-    .setup-banner {
-      width: min(560px, 94vw);
-      background: linear-gradient(135deg, #fff8e1, #fff3cd);
-      border: 2px solid #f0c040;
-      border-radius: var(--radius);
-      padding: 18px 22px;
-      margin-top: 16px;
-    }
-    .setup-banner h3 {
-      font-size: 13px;
-      font-weight: 700;
-      color: #7a5500;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .setup-banner ol {
-      padding-left: 18px;
-      font-size: 12px;
-      color: #5a4400;
-      line-height: 1.8;
-    }
-    .setup-banner code {
-      background: rgba(0,0,0,0.08);
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-    }
+/* Tenant filter for device table */
+.tenant-filter-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.tf-label{font-size:11px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;}
+.tf-btn{padding:5px 12px;border:1.5px solid var(--bdr);border-radius:99px;font-size:11.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;background:var(--sur);color:var(--txs);}
+.tf-btn.active{color:#fff;border-color:transparent;}
 
-    /* ── Responsive ── */
-    @media (max-width: 420px) {
-      .card { padding: 24px 16px 20px; }
-      .device-grid { grid-template-columns: 1fr; }
-      .radio-group { flex-direction: column; }
-    }
-  </style>
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:14px 12px;text-align:center;box-shadow:var(--shds);}
+.stat-n{font-size:28px;font-weight:800;color:var(--navy);font-family:'Sora',sans-serif;}
+.stat-l{font-size:10.5px;color:var(--txs);margin-top:3px;}
+
+/* Card wrapper */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:20px;margin-bottom:16px;box-shadow:var(--shds);animation:fadeUp .2s ease;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none;box-shadow:0 4px 18px rgba(13,43,78,.35);}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+#toast.error{background:var(--err);}
+#toast.ok{background:var(--ok);}
+#toast.warn{background:#b45309;}
+
+/* Sync indicator */
+#syncDot{width:6px;height:6px;border-radius:50%;background:#6ee7b7;display:inline-block;}
+#syncDot.syncing{background:#fbbf24;animation:pulse .8s ease infinite;}
+#syncDot.error{background:#f87171;}
+
+/* Responsive */
+@media(max-width:640px){
+  .content{padding:16px 14px 60px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .add-form-row{grid-template-columns:1fr;}
+  .tenant-grid{grid-template-columns:1fr;}
+  .stat-n{font-size:22px;}
+  .ph h1{font-size:18px;}
+}
+</style>
 </head>
 <body>
 
-<header>
-  <div class="header-badge">作業指示書</div>
-  <h1>🔧 作業指示フォーム</h1>
-  <p>入力後「送信」ボタンを押すと、自動でメールが送信されます</p>
-</header>
-
-
-
-<div class="card">
-
-  <!-- 施設名 -->
-  <div class="section-label"><span class="dot"></span>施設情報</div>
-  <div class="facility-row">
-    <span class="facility-tag">施設名</span>
-    <span class="facility-name">株式会社A</span>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-logo">⚡</div>
+  <div>
+    <div class="tb-name">カニエ電機株式会社</div>
+    <div class="tb-sub">KANIE ELECTRIC CO., LTD</div>
   </div>
-
-  <!-- 指示内容 -->
-  <div class="form-group">
-    <label class="field-label">📋 指示内容 <span class="req">必須</span></label>
-    <div class="radio-group">
-      <div class="radio-btn">
-        <input type="radio" id="kosho" name="shiji" value="故障" />
-        <label for="kosho">⚠️ 故障</label>
-      </div>
-      <div class="radio-btn">
-        <input type="radio" id="torikae" name="shiji" value="取替" />
-        <label for="torikae">🔄 取替</label>
-      </div>
-    </div>
+  <div class="tb-divider"></div>
+  <div class="tb-caption">テナント管理</div>
+  <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.7);margin-left:8px;">
+    <span id="syncDot"></span>
+    <span id="syncTxt">同期済み</span>
   </div>
-
-  <div class="divider"></div>
-
-  <!-- 機器 -->
-  <div class="form-group">
-    <label class="field-label">🏭 機器 <span class="req">必須</span></label>
-    <div class="device-grid">
-
-      <!-- エアコン -->
-      <div class="device-item">
-        <input type="checkbox" id="aircon" value="エアコン" onchange="toggleMachineNum(this,'aircon-num')" />
-        <label for="aircon">
-          <span class="icon">❄️</span> エアコン
-          <span class="check-mark">✓</span>
-        </label>
-        <div class="machine-num-wrap" id="aircon-num">
-          <div class="machine-num-inner">
-            <label for="aircon-no">番号</label>
-            <input type="text" id="aircon-no" placeholder="A3-1" />
-            <span>番号</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 洗濯機 -->
-      <div class="device-item">
-        <input type="checkbox" id="sentaku" value="洗濯機" onchange="toggleMachineNum(this,'sentaku-num')" />
-        <label for="sentaku">
-          <span class="icon">🫧</span> 洗濯機
-          <span class="check-mark">✓</span>
-        </label>
-        <div class="machine-num-wrap" id="sentaku-num">
-          <div class="machine-num-inner">
-            <label for="aircon-no">番号</label>
-            <input type="text" id="aircon-no" placeholder="A3-1" />
-            <span>番号</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 乾燥機 -->
-      <div class="device-item">
-        <input type="checkbox" id="kansou" value="乾燥機" onchange="toggleMachineNum(this,'kansou-num')" />
-        <label for="kansou">
-          <span class="icon">🌀</span> 乾燥機
-          <span class="check-mark">✓</span>
-        </label>
-        <div class="machine-num-wrap" id="kansou-num">
-          <div class="machine-num-inner">
-            <label for="aircon-no">番号</label>
-            <input type="text" id="aircon-no" placeholder="A3-1" />
-            <span>番号</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 冷蔵庫 -->
-      <div class="device-item">
-        <input type="checkbox" id="reizou" value="冷蔵庫" onchange="toggleMachineNum(this,'reizou-num')" />
-        <label for="reizou">
-          <span class="icon">🧊</span> 冷蔵庫
-          <span class="check-mark">✓</span>
-        </label>
-        <div class="machine-num-wrap" id="reizou-num">
-          <div class="machine-num-inner">
-            <label for="aircon-no">番号</label>
-            <input type="text" id="aircon-no" placeholder="A3-1" />
-            <span>番号</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- その他 (full width) -->
-      <div class="device-item" style="grid-column: 1 / -1;">
-        <input type="checkbox" id="sonota" value="その他" />
-        <label for="sonota">
-          <span class="icon">📦</span> その他
-          <span class="check-mark">✓</span>
-        </label>
-      </div>
-      <div class="machine-num-wrap" id="reizou-num">
-          <div class="machine-num-inner">
-            <label for="aircon-no">その他</label>
-            <input type="text" id="aircon-no" placeholder="内容入力してください" />
-            <span>番号</span>
-          </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- 備考 -->
-  <div class="form-group">
-    <label class="field-label" for="biko">📝 備考 <span class="opt">任意</span></label>
-    <textarea id="biko" placeholder="補足事項があればご記入ください…"></textarea>
-  </div>
-
-  <!-- 担当者 -->
-  <div class="form-group">
-    <label class="field-label" for="tanto">👤 担当者 <span class="req">必須</span></label>
-    <input type="text" id="tanto" placeholder="例：山田 太郎" />
-  </div>
-
-  <!-- Submit -->
-  <button class="btn-submit" id="sendBtn" onclick="sendForm()">
-    <span class="send-icon">📨</span> 送信する
-  </button>
-
+  <div class="tb-spacer"></div>
+  <button id="notifBtn" onclick="requestNotifPermission()" style="background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);padding:4px 11px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;" title="通知を有効にする">🔔 通知ON</button>
+  <div class="tb-badge">🔐 管理者専用</div>
+  <a href="index_web_v6.html" class="btn-back" style="margin-left:8px;">← メインに戻る</a>
 </div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- Page Header -->
+  <div class="ph">
+    <h1>🏢 テナント管理ダッシュボード</h1>
+    <p>各会社のリンク発行・PINコード設定・デバイス承認を管理します</p>
+    <div class="ph-line"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-n" id="statTenants">0</div><div class="stat-l">テナント数</div></div>
+    <div class="stat-card"><div class="stat-n" id="statDevices">0</div><div class="stat-l">登録デバイス</div></div>
+    <div class="stat-card"><div class="stat-n" id="statPending" style="color:#d97706;">0</div><div class="stat-l">承認待ち</div></div>
+    <div class="stat-card"><div class="stat-n" id="statBlocked" style="color:var(--err);">0</div><div class="stat-l">ブロック</div></div>
+  </div>
+
+  <!-- ══ TENANT LIST ══ -->
+  <div class="section-title">🏢 テナント一覧</div>
+  <div class="tenant-grid" id="tenantGrid">
+    <div style="text-align:center;padding:40px;color:var(--txl);font-size:13px;grid-column:1/-1;">⏳ 読み込み中…</div>
+  </div>
+
+  <!-- ══ REGISTRATIONS ══ -->
+  <div style="margin-bottom:24px;">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>📝 新規登録申請 <span id="regBadge" style="display:none;background:var(--orange);color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;margin-left:6px;"></span></span>
+      <a href="register.html" target="_blank" style="font-size:11px;background:var(--orange);color:#fff;padding:4px 12px;border-radius:99px;text-decoration:none;font-weight:700;">＋ 登録ページを開く</a>
+    </div>
+    <div id="regList">
+      <div style="text-align:center;padding:20px;color:var(--txl);font-size:13px;">⏳ 読み込み中…</div>
+    </div>
+  </div>
+
+  <!-- ══ ADD TENANT ══ -->
+  <div class="section-title">➕ テナントを追加</div>
+  <div class="add-tenant-card">
+    <div class="add-tenant-title">新しい取引先を追加</div>
+    <div class="add-form-row">
+      <div class="fld"><label>テナントID（英数字・ハイフン）</label><input id="newTenantId" placeholder="例: T003" maxlength="20"/></div>
+      <div class="fld"><label>会社名（日本語）</label><input id="newTenantName" placeholder="例: 会社C"/></div>
+    </div>
+    <div class="add-form-row">
+      <div class="fld"><label>正式名称</label><input id="newTenantFull" placeholder="例: 株式会社C"/></div>
+      <div class="fld"><label>PINコード（4桁数字）</label><input id="newTenantPin" placeholder="例: 5678" maxlength="4" inputmode="numeric"/></div>
+    </div>
+    <div class="add-form-row">
+      <div class="fld"><label>アイコン（絵文字）</label><input id="newTenantIcon" placeholder="🏭" maxlength="4"/></div>
+      <div class="fld"><label>テーマカラー</label>
+        <select id="newTenantColor">
+          <option value="#1a4a2e">🌿 グリーン（Sugatec）</option>
+          <option value="#0d2b4e">🔵 ネイビー（デフォルト）</option>
+          <option value="#7c3aed">🟣 パープル</option>
+          <option value="#c2410c">🟠 オレンジ</option>
+          <option value="#0369a1">🩵 スカイブルー</option>
+          <option value="#be185d">🩷 ピンク</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addTenant()">➕ テナントを追加する</button>
+  </div>
+
+  <!-- ══ DEVICE MANAGEMENT ══ -->
+  <div style="margin-top:32px;">
+    <div class="section-title">📱 デバイス管理（全テナント）</div>
+    <div class="card">
+      <!-- Tenant filter -->
+      <div class="tenant-filter-wrap">
+        <span class="tf-label">テナントで絞り込み:</span>
+        <button class="tf-btn active" style="background:var(--navy);border-color:var(--navy);color:#fff;" onclick="filterDevices('all',this)">すべて</button>
+        <div id="tenantFilterBtns" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <!-- Status filter -->
+      <div class="device-filter">
+        <button class="df-btn active" onclick="filterDevStatus('all',this)">すべて</button>
+        <button class="df-btn" onclick="filterDevStatus('pending',this)">⏳ 承認待ち</button>
+        <button class="df-btn" onclick="filterDevStatus('allowed',this)">✅ 許可済み</button>
+        <button class="df-btn" onclick="filterDevStatus('blocked',this)">🚫 ブロック</button>
+      </div>
+      <div id="deviceTableWrap"><div class="dev-empty">⏳ 読み込み中…</div></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
 
 <div id="toast"></div>
 
+<!-- ══════════════════════════════════════════
+   JAVASCRIPT
+══════════════════════════════════════════ -->
 <script>
-  // ─────────────────────────────────────────
-  //  ⚠️  ここに EmailJS の情報を入力してください
-  // ─────────────────────────────────────────
-  const EMAILJS_PUBLIC_KEY  = "_efCoOTySMW7-n5dK";   // EmailJS Public Key
-  const EMAILJS_SERVICE_ID  = "service_qo6afaf";   // Service ID
-  const EMAILJS_TEMPLATE_ID = "template_3wrvxdq";  // Template ID
-  // ─────────────────────────────────────────
+/* ══ FIRESTORE WAIT ══ */
+function _waitFb(cb){
+  if(window._fbReady) cb();
+  else document.addEventListener('fb-ready', cb, {once:true});
+}
 
-  // Init EmailJS
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+/* ══ STATE ══ */
+let _allDevices = [];
+let _allTenants = [];
+let _devUnsub = null;
+let _tenantUnsub = null;
+let _devTenantFilter = 'all';
+let _devStatusFilter = 'all';
 
-  // Toggle machine number input
-  function toggleMachineNum(checkbox, wrapperId) {
-    const wrap = document.getElementById(wrapperId);
-    if (checkbox.checked) {
-      wrap.classList.add('show');
-    } else {
-      wrap.classList.remove('show');
-    }
+/* ══ HARDCODED TENANTS (initial seed) ══
+   After first load, tenants are stored in Firestore /tenants/ */
+const SEED_TENANTS = [
+  {
+    id: 'T001', name: 'スガテック', fullName: '株式会社スガテック',
+    icon: '🌿', color: '#1a4a2e', pin: '1234',
+    url: 'sugatec.html', active: true
+  },
+  {
+    id: 'T002', name: '会社B', fullName: '株式会社B',
+    icon: '🏭', color: '#0d2b4e', pin: '5678',
+    url: 'kaisha-b.html', active: true
+  },
+  {
+    id: 'T003', name: '会社C', fullName: '株式会社C',
+    icon: '🏢', color: '#3b1f6b', pin: '9012',
+    url: 'kaisha-c.html', active: true
+  },
+];
+
+/* ══ REGISTRATIONS ══ */
+let _allRegs = [];
+let _regUnsub = null;
+
+function subscribeRegistrations(){
+  _waitFb(() => {
+    const col = window._fs.collection(window._db, 'registrations');
+    _regUnsub = window._fs.onSnapshot(
+      window._fs.query(col, window._fs.orderBy('ts', 'desc')),
+      snap => {
+        const prev = _allRegs.map(r => r.tenantId);
+        _allRegs = snap.docs.map(d => ({...d.data(), _docId: d.id}));
+
+        // Notify new pending registrations
+        _allRegs.forEach(r => {
+          if(r.status === 'pending' && !prev.includes(r.tenantId) && prev.length > 0){
+            notifyNewRegistration(r);
+          }
+        });
+
+        renderRegistrations();
+        updateRegBadge();
+      },
+      err => console.error('reg snapshot error', err)
+    );
+  });
+}
+
+function updateRegBadge(){
+  const pending = _allRegs.filter(r => r.status === 'pending').length;
+  const badge = document.getElementById('regBadge');
+  if(badge){
+    badge.style.display = pending > 0 ? 'inline' : 'none';
+    badge.textContent = pending + ' 件';
+  }
+  // Update stat card
+  const el = document.getElementById('statPending');
+  if(el) el.textContent = _allDevices.filter(d => d.status === 'pending').length + pending;
+}
+
+function renderRegistrations(){
+  const el = document.getElementById('regList');
+  if(!el) return;
+
+  if(!_allRegs.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--txl);font-size:13px;">📭 登録申請はありません</div>';
+    return;
   }
 
-  // Show toast
-  function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'show' + (isError ? ' error' : '');
-    setTimeout(() => { t.className = ''; }, 4000);
-  }
+  el.innerHTML = _allRegs.map(r => {
+    const statusClass = r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : '';
+    const statusBadge = r.status === 'approved'
+      ? '<span class="reg-status-badge rsb-approved">✅ 承認済み</span>'
+      : r.status === 'rejected'
+      ? '<span class="reg-status-badge rsb-rejected">🚫 却下</span>'
+      : '<span class="reg-status-badge rsb-pending">⏳ 承認待ち</span>';
 
-  // Build machine info string
-  function getMachineInfo() {
-    const devices = [
-      { id: 'aircon',  label: 'エアコン', numId: 'aircon-no'  },
-      { id: 'sentaku', label: '洗濯機',   numId: 'sentaku-no' },
-      { id: 'kansou',  label: '乾燥機',   numId: 'kansou-no'  },
-      { id: 'reizou',  label: '冷蔵庫',   numId: 'reizou-no'  },
-      { id: 'sonota',  label: 'その他',   numId: null         },
-    ];
-    const selected = [];
-    devices.forEach(d => {
-      const cb = document.getElementById(d.id);
-      if (cb && cb.checked) {
-        let text = d.label;
-        if (d.numId) {
-          const num = document.getElementById(d.numId).value;
-          if (num) text += `（${num}台）`;
-        }
-        selected.push(text);
-      }
-    });
-    return selected.join('、') || '（未選択）';
-  }
+    const approveBtn = r.status === 'pending'
+      ? `<button class="btn-reg-approve" onclick="approveRegistration('${escHtml(r.tenantId)}','${r._docId}')">✅ 承認・テナント有効化</button>`
+      : '';
+    const rejectBtn = r.status === 'pending'
+      ? `<button class="btn-reg-reject" onclick="rejectRegistration('${r._docId}')">🚫 却下</button>`
+      : '';
 
-  // Main send function
-  async function sendForm() {
-    // Validation
-    const shiji = document.querySelector('input[name="shiji"]:checked');
-    const tanto = document.getElementById('tanto').value.trim();
-    const devices = document.querySelectorAll('.device-item input[type="checkbox"]:checked');
+    const fullUrl = `${window.location.href.replace(/[^/]*$/, '')}${escHtml(r.url||'')}`;
 
-    if (!shiji)         { showToast('⚠️ 指示内容を選択してください', true); return; }
-    if (devices.length === 0) { showToast('⚠️ 機器を1つ以上選択してください', true); return; }
-    if (!tanto)         { showToast('⚠️ 担当者名を入力してください', true); return; }
+    // Color swatch
+    const colorSwatch = r.color
+      ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${escHtml(r.color)};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin-right:4px;"></span>`
+      : '';
 
-    if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
-      showToast('⚙️ EmailJS の設定が必要です。HTMLファイル内のキーを設定してください', true);
-      return;
-    }
+    return `<div class="reg-card ${statusClass}">
+      <div class="reg-top">
+        <div>
+          <div class="reg-co">${r.icon||'🏢'} ${escHtml(r.name)}</div>
+          <div class="reg-full" style="font-size:12px;color:var(--txs);margin-top:2px;">${escHtml(r.fullName||'')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          ${statusBadge}
+          <span class="reg-date">${r.registeredAt||r.ts||'—'}</span>
+        </div>
+      </div>
 
-    // Build params
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+      <!-- 会社の詳細情報 -->
+      <div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--rads);padding:10px 13px;margin-bottom:10px;font-size:12.5px;">
+        <div style="font-size:10.5px;font-weight:700;color:var(--txl);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">📋 登録情報</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;">
+          ${r.contactName ? `<div><span style="color:var(--txl);font-size:11px;">👤 担当者</span><br><span style="font-weight:600;color:var(--navy);">${escHtml(r.contactName)}</span></div>` : ''}
+          ${r.dept ? `<div><span style="color:var(--txl);font-size:11px;">🏬 部署</span><br><span style="font-weight:600;color:var(--navy);">${escHtml(r.dept)}</span></div>` : ''}
+          ${r.contactEmail ? `<div style="grid-column:1/-1;"><span style="color:var(--txl);font-size:11px;">📧 メール</span><br><span style="font-weight:600;color:var(--navy);">${escHtml(r.contactEmail)}</span></div>` : ''}
+          ${r.contactTel ? `<div><span style="color:var(--txl);font-size:11px;">📞 電話</span><br><span style="font-weight:600;color:var(--navy);">${escHtml(r.contactTel)}</span></div>` : ''}
+          <div><span style="color:var(--txl);font-size:11px;">🆔 テナントID</span><br><span style="font-weight:700;color:var(--navy);font-family:monospace;font-size:11.5px;">${escHtml(r.tenantId)}</span></div>
+          <div><span style="color:var(--txl);font-size:11px;">🔐 PIN</span><br><span style="font-weight:800;color:var(--navy);font-family:monospace;letter-spacing:4px;font-size:14px;">${escHtml(r.pin)}</span></div>
+          ${r.color ? `<div><span style="color:var(--txl);font-size:11px;">🎨 テーマカラー</span><br>${colorSwatch}<span style="font-weight:600;color:var(--navy);font-family:monospace;">${escHtml(r.color)}</span></div>` : ''}
+          ${r.url ? `<div style="grid-column:1/-1;"><span style="color:var(--txl);font-size:11px;">🔗 ポータルファイル</span><br><span style="font-weight:600;color:var(--blue);font-family:monospace;font-size:11px;word-break:break-all;">${escHtml(r.url)}</span></div>` : ''}
+        </div>
+        ${r.note ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);"><span style="color:var(--txl);font-size:11px;">📝 備考</span><br><span style="color:var(--txb);">${escHtml(r.note)}</span></div>` : ''}
+      </div>
 
-    const params = {
-      shisetsumei: "株式会社A",
-      shiji:       shiji.value,
-      kiki:        getMachineInfo(),
-      biko:        document.getElementById('biko').value.trim() || '（なし）',
-      tanto:       tanto,
-      date:        dateStr,
-      to_email:    "damthanhtung1911@gmail.com",
-      from_email:  "tung16208@gmail.com",
-    };
+      <div class="reg-actions">
+        ${approveBtn}
+        ${rejectBtn}
+        <button class="btn-reg-copy" onclick="copyRegUrl('${escHtml(fullUrl)}')">📋 URLコピー</button>
+        <button class="btn-reg-copy" style="background:var(--navy);color:#fff;border-color:var(--navy);" onclick="downloadPortalForReg('${escHtml(r.tenantId)}')">⬇️ ポータルDL</button>
+        <button class="btn-reg-reject" style="border-color:#fca5a5;" onclick="deleteRegistration('${r._docId}','${escHtml(r.name)}')">🗑️ 削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-    // Disable button
-    const btn = document.getElementById('sendBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> 送信中…';
-
+async function approveRegistration(tenantId, docId){
+  if(!confirm(`テナント「${tenantId}」を承認してよろしいですか？
+承認するとテナントが有効化され、利用可能になります。`)) return;
+  _waitFb(async () => {
     try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
-      showToast('✅ 送信完了！メールが送られました');
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      showToast('❌ 送信に失敗しました。設定を確認してください', true);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<span class="send-icon">📨</span> 送信する';
-    }
+      setSyncStatus('syncing');
+      // 1. Make sure tenant doc exists and is active
+      await window._fs.setDoc(
+        window._fs.doc(window._db, 'tenants', tenantId),
+        { active: true, approvedAt: nowStr() },
+        { merge: true }
+      );
+      // 2. Update registration status
+      await window._fs.setDoc(
+        window._fs.doc(window._db, 'registrations', docId),
+        { status: 'approved', approvedAt: nowStr() },
+        { merge: true }
+      );
+      showToast(`✅ テナント「${tenantId}」を承認しました`, 'ok');
+      setSyncStatus('ok');
+    } catch(e){ console.error(e); showToast('エラーが発生しました', 'error'); setSyncStatus('error'); }
+  });
+}
+
+async function rejectRegistration(docId){
+  if(!confirm('この申請を却下しますか？')) return;
+  _waitFb(async () => {
+    try {
+      await window._fs.setDoc(
+        window._fs.doc(window._db, 'registrations', docId),
+        { status: 'rejected', rejectedAt: nowStr() },
+        { merge: true }
+      );
+      showToast('申請を却下しました', 'warn');
+    } catch(e){ showToast('エラーが発生しました', 'error'); }
+  });
+}
+
+async function deleteRegistration(docId, name){
+  if(!confirm(`「${name}」の登録申請を完全に削除しますか？\nこの操作は元に戻せません。`)) return;
+  _waitFb(async () => {
+    try {
+      await window._fs.deleteDoc(
+        window._fs.doc(window._db, 'registrations', docId)
+      );
+      showToast('✅ 登録申請を削除しました', 'ok');
+    } catch(e){ console.error(e); showToast('削除に失敗しました', 'error'); }
+  });
+}
+
+function copyRegUrl(url){
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('✅ URLをコピーしました', 'ok'))
+    .catch(() => showToast('コピーに失敗しました', 'error'));
+}
+
+// ══ PORTAL GENERATION (regenerate portal HTML for download) ══
+const PORTAL_THEMES = {'#1a4a2e': {'green2': '#2d7a4f', 'green3': '#0e3320', 'lime': '#4ade80', 'lime2': '#86efac'}, '#0d2b4e': {'green2': '#1a3f6b', 'green3': '#071933', 'lime': '#60a5fa', 'lime2': '#93c5fd'}, '#7c3aed': {'green2': '#5a3490', 'green3': '#3b1f6b', 'lime': '#c084fc', 'lime2': '#d8b4fe'}, '#c2410c': {'green2': '#9a3409', 'green3': '#7c2d12', 'lime': '#fb923c', 'lime2': '#fdba74'}, '#0369a1': {'green2': '#0284c7', 'green3': '#0c4a6e', 'lime': '#38bdf8', 'lime2': '#7dd3fc'}, '#be185d': {'green2': '#9d174d', 'green3': '#831843', 'lime': '#f472b6', 'lime2': '#f9a8d4'}};
+
+function b64ToStrAdmin(b64){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function generateSlugAdmin(name){
+  return (name||'company').toLowerCase().replace(/[\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]+/g,'').replace(/[^a-z0-9]/g,'').slice(0,16)||('co'+Date.now().toString(36).slice(-4));
+}
+
+// Fetch TEMPLATE_B64 from register.html if available, else use stored
+async function buildPortalHtmlForReg(reg){
+  // reg contains: name, fullName, icon, color, pin, tenantId, url
+  const slug = generateSlugAdmin(reg.name);
+  const prefix = slug.slice(0,6);
+  const cfg = {
+    tenantId: reg.tenantId,
+    short: reg.name,
+    full: reg.fullName || reg.name,
+    icon: reg.icon || '🏢',
+    color: reg.color || '#1a4a2e',
+    pin: reg.pin,
+    prefix,
+    slug
+  };
+
+  // We need TEMPLATE_B64 — fetch register.html to get it
+  if(!window._portalTemplate){
+    try {
+      const resp = await fetch('register.html');
+      const text = await resp.text();
+      const m = text.match(/const TEMPLATE_B64\s*=\s*"([^"]+)"/);
+      if(m) window._portalTemplate = m[1];
+    } catch(e){ console.warn('Could not fetch register.html template:', e); }
   }
 
-  function resetForm() {
-    document.querySelectorAll('input[name="shiji"]').forEach(r => r.checked = false);
-    document.querySelectorAll('.device-item input[type="checkbox"]').forEach(c => {
-      c.checked = false;
-      c.dispatchEvent(new Event('change'));
+  if(!window._portalTemplate){
+    showToast('⚠️ テンプレートが取得できませんでした。register.htmlと同じフォルダに配置してください。', 'error');
+    return null;
+  }
+
+  let html = b64ToStrAdmin(window._portalTemplate);
+  const th = PORTAL_THEMES[cfg.color] || PORTAL_THEMES['#1a4a2e'];
+  const shortUpper = cfg.short.toUpperCase().replace(/\s/g,'-');
+
+  html = html.replace('__COMMENT__', cfg.short + ' PORTAL');
+  html = html.replace('__CSS_COLORS__',
+    `:root {\n  --green:   ${cfg.color};\n  --green2:  ${th.green2};\n  --green3:  ${th.green3};\n  --lime:    ${th.lime};\n  --lime2:   ${th.lime2};`
+  );
+  html = html.replace('__TITLE__', `<title>作業依頼｜${cfg.short} × カニエ電機</title>`);
+  html = html.replace('__FAVICON_COLOR__', cfg.color.replace('#','%23'));
+  html = html.replace('__LS_LOGO__', `<div class="ls-logo">${cfg.icon}</div>`);
+  html = html.replace('__LS_NAME__', `<div class="ls-name">${cfg.short}</div>`);
+  html = html.replace('__LS_SUB__', `<div class="ls-sub">${shortUpper} × KANIE ELECTRIC</div>`);
+  html = html.replace('__AUTH_LOGO__', `<div class="auth-logo">${cfg.icon}</div>`);
+  html = html.replace('__AUTH_COMPANY__', `<div class="auth-company">${cfg.short}</div>`);
+  html = html.replace('__AUTH_CORP__', `<div class="auth-corp">${cfg.full}</div>`);
+  html = html.replace('__TB_LOGO__', `<div class="tb-logo">${cfg.icon}</div>`);
+  html = html.replace('__TB_MAIN__', `<div class="tb-main">${cfg.short}</div>`);
+  html = html.replace('__TB_CLIENT__', `<div class="tb-client">${shortUpper} × KANIE ELECTRIC</div>`);
+  html = html.replace('__UPNAME__', `<span id="upname">${cfg.short}</span>`);
+  html = html.replace('__CO_NAME__', `<div class="co-name">${cfg.full}</div>`);
+  html = html.replace('__TENANT_ID__', `const TENANT_ID   = '${cfg.tenantId}';`);
+  html = html.replace('__TENANT_NAME__', `const TENANT_NAME = '${cfg.short}';`);
+  html = html.replace('__TENANT_FULL__', `const TENANT_FULL = '${cfg.full}';`);
+  html = html.replace('__TENANT_PIN__', `const TENANT_PIN  = '${cfg.pin}';`);
+  html = html.replace('__LS_DEVICE_KEY__', `'${prefix}_device_id'`);
+  html = html.replace('__LS_SESSION_KEY__', `'${prefix}_session'`);
+  html = html.replace('__DEVICE_PREFIX_FULL__', `'${prefix}-' + Date.now().toString(36) + '-'`);
+  html = html.replace('__DEVICE_PREFIX_SHORT__', `return '${prefix}-' + Date.now().toString(36);`);
+  html = html.replace('__USER_ID_LINE__', `userId: '${cfg.tenantId}', userName: TENANT_NAME,`);
+  html = html.replace('__LOG_BLOCKED__', `logLoginEvent('${cfg.tenantId}', TENANT_NAME, 'blocked');`);
+  html = html.replace('__LOG_DEV__', `logLoginEvent('${cfg.tenantId}', TENANT_NAME, devData.status === 'allowed' ? 'success' : 'blocked');`);
+  html = html.replace('__LOG_RECHECK__', `logLoginEvent('${cfg.tenantId}', TENANT_NAME, status === 'allowed' ? 'success' : 'blocked');`);
+  html = html.replace('__EXCEL_NAME__', `依頼履歴_${cfg.short}_`);
+
+  return { html, filename: cfg.url || `portal-${slug}.html` };
+}
+
+async function downloadPortalForReg(tenantId){
+  const reg = _allRegs.find(r => r.tenantId === tenantId);
+  if(!reg){ showToast('⚠️ 登録情報が見つかりません', 'error'); return; }
+  const result = await buildPortalHtmlForReg(reg);
+  if(!result) return;
+  const blob = new Blob([result.html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = result.filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✅ ポータルファイルをダウンロードしました', 'ok');
+}
+
+function notifyNewRegistration(reg){
+  // Banner
+  let banner = document.getElementById('newRegBanner');
+  if(!banner){ banner = document.createElement('div'); banner.id='newRegBanner'; banner.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1000;background:#fff;border:2px solid #fbbf24;border-radius:14px;box-shadow:0 8px 32px rgba(13,43,78,.22);padding:14px 20px;display:flex;align-items:center;gap:14px;min-width:320px;max-width:480px;animation:fadeUp .3s ease;'; document.body.appendChild(banner); }
+  banner.innerHTML = `<div style="font-size:26px;flex-shrink:0;">📝</div><div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#92400e;">新しい取引先登録申請</div><div style="font-size:12px;color:#78350f;margin-top:2px;">${escHtml(reg.name)} — ${escHtml(reg.contactName||'')}</div><div style="font-size:10.5px;color:#a16207;margin-top:1px;">${escHtml(reg.contactEmail||'')}</div></div><button onclick="document.getElementById('newRegBanner').remove()" style="padding:7px 10px;background:transparent;border:1.5px solid #d1d5db;border-radius:9px;font-size:12px;cursor:pointer;color:#6b7280;">✕</button>`;
+  clearTimeout(banner._t); banner._t = setTimeout(() => { if(banner.parentNode) banner.remove(); }, 30000);
+
+  // Browser notification
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('📝 新しい取引先登録申請', { body: `${reg.name} — ${reg.contactName}`, tag: reg.tenantId });
+  }
+
+  // Sound
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [660,880,1100].forEach((f,i) => {
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=f; g.gain.setValueAtTime(0.2,ctx.currentTime+i*.1);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*.1+0.1);
+      o.start(ctx.currentTime+i*.1); o.stop(ctx.currentTime+i*.1+0.12);
     });
-    document.querySelectorAll('.machine-num-inner input').forEach(i => i.value = '');
-    document.getElementById('biko').value = '';
-    document.getElementById('tanto').value = '';
-  }
-</script>
+  } catch(e){}
+}
 
+/* ══ SYNC STATUS ══ */
+function setSyncStatus(s){
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncTxt');
+  if(!dot) return;
+  dot.className = '';
+  if(s === 'syncing'){ dot.classList.add('syncing'); if(txt) txt.textContent = '同期中…'; }
+  else if(s === 'error'){ dot.classList.add('error'); if(txt) txt.textContent = 'エラー'; }
+  else { if(txt) txt.textContent = '同期済み'; }
+}
+
+/* ══ LOAD TENANTS FROM FIRESTORE ══ */
+function subscribeAll(){
+  setSyncStatus('syncing');
+  _waitFb(() => {
+    // Subscribe tenants
+    const tenantCol = window._fs.collection(window._db, 'tenants');
+    _tenantUnsub = window._fs.onSnapshot(tenantCol, snap => {
+      if(snap.empty){
+        // Seed initial tenants
+        seedTenants();
+      } else {
+        _allTenants = snap.docs.map(d => ({...d.data(), id: d.id}));
+        renderTenants();
+        buildTenantFilterBtns();
+      }
+      setSyncStatus('ok');
+    }, e => { console.error(e); setSyncStatus('error'); });
+
+    // Subscribe devices
+    let _firstDeviceLoad = true;
+    const devCol = window._fs.collection(window._db, 'devices');
+    _devUnsub = window._fs.onSnapshot(devCol, snap => {
+      const prevPendingIds = new Set(_allDevices.filter(d => d.status === 'pending').map(d => d.deviceId));
+      _allDevices = snap.docs.map(d => d.data());
+
+      // Detect NEW pending devices (not on first load)
+      if(!_firstDeviceLoad){
+        const newPending = _allDevices.filter(d =>
+          d.status === 'pending' && !prevPendingIds.has(d.deviceId)
+        );
+        if(newPending.length > 0){
+          const t = _allTenants.find(t2 => t2.id === newPending[0].tenantId);
+          const tName = t ? `${t.icon} ${t.name}` : newPending[0].tenantId;
+          notifyNewDevice(tName, newPending[0].label || '不明', newPending[0].deviceId);
+        }
+      }
+      _firstDeviceLoad = false;
+
+      renderDeviceTable();
+      updateStats();
+      setSyncStatus('ok');
+    }, e => { console.error(e); setSyncStatus('error'); });
+  });
+}
+
+async function seedTenants(){
+  _waitFb(async () => {
+    try {
+      for(const t of SEED_TENANTS){
+        await window._fs.setDoc(window._fs.doc(window._db, 'tenants', t.id), t);
+      }
+    } catch(e){ console.error('seedTenants', e); }
+  });
+}
+
+/* ══ RENDER TENANT CARDS ══ */
+function renderTenants(){
+  const grid = document.getElementById('tenantGrid');
+  if(!_allTenants.length){
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--txl);grid-column:1/-1;">テナントがありません</div>';
+    return;
+  }
+  grid.innerHTML = _allTenants.map(t => {
+    const devs = _allDevices.filter(d => d.tenantId === t.id);
+    const allowed = devs.filter(d => d.status === 'allowed').length;
+    const pending = devs.filter(d => d.status === 'pending').length;
+    const blocked = devs.filter(d => d.status === 'blocked').length;
+
+    return `<div class="tenant-card ${t.active ? 'active' : 'inactive'}">
+      <div class="tc-header">
+        <div class="tc-icon" style="background:${t.color}20;border:2px solid ${t.color}30;">${t.icon || '🏢'}</div>
+        <div>
+          <div class="tc-name">${escHtml(t.name)}</div>
+          <div class="tc-id">ID: ${escHtml(t.id)}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${t.active?'var(--ok)':'var(--txl)'};"></div>
+          <span style="font-size:10px;color:var(--txs);">${t.active?'有効':'無効'}</span>
+        </div>
+      </div>
+
+      <!-- URL -->
+      <div class="tc-url">
+        <span class="tc-url-icon">🔗</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(t.url||t.id+'.html')}">${escHtml(t.url || t.id + '.html')}</span>
+        <button class="btn-copy" onclick="copyUrl('${escHtml(t.url||t.id+'.html')}')">コピー</button>
+      </div>
+
+      <!-- PIN -->
+      <div style="margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;">🔑 PINコード</div>
+        <div class="tc-pin">
+          <div class="pin-display" id="pinDisplay-${t.id}">
+            <span id="pinVal-${t.id}" class="pin-hidden" onclick="togglePin('${t.id}')" title="クリックで表示">${escHtml(t.pin || '----')}</span>
+          </div>
+          <button class="pin-toggle" onclick="togglePin('${t.id}')" title="表示/非表示">👁</button>
+          <button class="btn-copy" onclick="startPinEdit('${t.id}')" style="background:var(--orange);">変更</button>
+        </div>
+        <div class="pin-edit-wrap" id="pinEdit-${t.id}">
+          <div class="pin-edit-row">
+            <input class="pin-input" id="pinNew-${t.id}" type="text" placeholder="新しい4桁PIN" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
+            <button class="btn-sm-g" onclick="savePin('${t.id}')">✓ 保存</button>
+            <button class="btn-sm-c" onclick="cancelPinEdit('${t.id}')">✕</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--txs);">⚠️ PINを変更すると既存のセッションは無効になります</div>
+        </div>
+      </div>
+
+      <!-- Device counts -->
+      <div class="tc-meta">
+        <span class="tc-chip ok">✅ 許可 ${allowed}</span>
+        ${pending > 0 ? `<span class="tc-chip warn">⏳ 待ち ${pending}</span>` : ''}
+        ${blocked > 0 ? `<span class="tc-chip err">🚫 ブロック ${blocked}</span>` : ''}
+        ${!devs.length ? '<span class="tc-chip">📱 デバイスなし</span>' : ''}
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
+        <button onclick="filterDevices('${t.id}',null)" style="padding:5px 11px;background:var(--sur2);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">📱 デバイスを見る</button>
+        <button onclick="toggleTenantActive('${t.id}',${!t.active})" style="padding:5px 11px;background:${t.active?'var(--err-bg)':'var(--ok-bg)'};border:1.5px solid ${t.active?'#fca5a5':'#6ee7b7'};border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;color:${t.active?'var(--err)':'#065f46'};">${t.active ? '⏹ 無効化' : '▶ 有効化'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══ PIN MANAGEMENT ══ */
+const _pinVisible = {};
+function togglePin(tenantId){
+  _pinVisible[tenantId] = !_pinVisible[tenantId];
+  const el = document.getElementById('pinVal-'+tenantId);
+  if(el) el.classList.toggle('pin-hidden', !_pinVisible[tenantId]);
+}
+function startPinEdit(tenantId){
+  document.getElementById('pinEdit-'+tenantId).classList.add('show');
+  document.getElementById('pinNew-'+tenantId).focus();
+}
+function cancelPinEdit(tenantId){
+  document.getElementById('pinEdit-'+tenantId).classList.remove('show');
+  document.getElementById('pinNew-'+tenantId).value = '';
+}
+async function savePin(tenantId){
+  const input = document.getElementById('pinNew-'+tenantId);
+  const pin = input.value.trim();
+  if(!/^\d{4}$/.test(pin)){showToast('⚠️ 4桁の数字を入力してください','error');return;}
+  _waitFb(async () => {
+    try {
+      setSyncStatus('syncing');
+      await window._fs.setDoc(
+        window._fs.doc(window._db, 'tenants', tenantId),
+        {pin}, {merge: true}
+      );
+      cancelPinEdit(tenantId);
+      showToast(`✅ テナント ${tenantId} のPINを更新しました`, 'ok');
+      setSyncStatus('ok');
+    } catch(e){ console.error(e); showToast('エラーが発生しました', 'error'); setSyncStatus('error'); }
+  });
+}
+
+/* ══ TENANT ACTIVE TOGGLE ══ */
+function toggleTenantActive(tenantId, newActive){
+  _waitFb(async () => {
+    try {
+      await window._fs.setDoc(window._fs.doc(window._db, 'tenants', tenantId), {active: newActive}, {merge: true});
+      showToast(newActive ? '✅ テナントを有効化しました' : '⏹ テナントを無効化しました', newActive ? 'ok' : 'warn');
+    } catch(e){ showToast('エラーが発生しました', 'error'); }
+  });
+}
+
+/* ══ ADD TENANT ══ */
+async function addTenant(){
+  const id = document.getElementById('newTenantId').value.trim().toUpperCase();
+  const name = document.getElementById('newTenantName').value.trim();
+  const fullName = document.getElementById('newTenantFull').value.trim();
+  const pin = document.getElementById('newTenantPin').value.trim();
+  const icon = document.getElementById('newTenantIcon').value.trim() || '🏢';
+  const color = document.getElementById('newTenantColor').value;
+
+  if(!id || !name || !pin){ showToast('⚠️ ID・会社名・PINは必須です', 'error'); return; }
+  if(!/^\d{4}$/.test(pin)){ showToast('⚠️ PINは4桁の数字を入力してください', 'error'); return; }
+  if(!/^[A-Z0-9-]+$/.test(id)){ showToast('⚠️ IDは英大文字・数字・ハイフンのみ使用可', 'error'); return; }
+
+  _waitFb(async () => {
+    try {
+      setSyncStatus('syncing');
+      const url = id.toLowerCase().replace(/[^a-z0-9-]/g,'') + '.html';
+      await window._fs.setDoc(window._fs.doc(window._db, 'tenants', id), {
+        id, name, fullName: fullName || name, icon, color, pin, url, active: true,
+        createdAt: nowStr()
+      });
+      ['newTenantId','newTenantName','newTenantFull','newTenantPin','newTenantIcon'].forEach(eid => {
+        document.getElementById(eid).value = '';
+      });
+      showToast(`✅ テナント「${name}」を追加しました`, 'ok');
+      setSyncStatus('ok');
+    } catch(e){ console.error(e); showToast('テナントの追加に失敗しました', 'error'); setSyncStatus('error'); }
+  });
+}
+
+/* ══ DEVICE TABLE ══ */
+function buildTenantFilterBtns(){
+  const wrap = document.getElementById('tenantFilterBtns');
+  if(!wrap) return;
+  wrap.innerHTML = _allTenants.map(t =>
+    `<button class="tf-btn" style="border-color:${t.color};color:${t.color};" onclick="filterDevices('${t.id}',this)">${t.icon} ${t.name}</button>`
+  ).join('');
+}
+
+function filterDevices(tenantId, btn){
+  _devTenantFilter = tenantId;
+  // Reset all tenant filter btns
+  document.querySelectorAll('.tf-btn').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = '';
+    b.style.color = b._origColor || '';
+  });
+  if(btn){
+    btn.classList.add('active');
+    btn._origColor = btn.style.color;
+    const t = _allTenants.find(t2 => t2.id === tenantId);
+    btn.style.background = t ? t.color : 'var(--navy)';
+    btn.style.color = '#fff';
+  }
+  renderDeviceTable();
+  // Scroll to device section
+  document.getElementById('deviceTableWrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function filterDevStatus(status, btn){
+  _devStatusFilter = status;
+  document.querySelectorAll('.df-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderDeviceTable();
+}
+
+function renderDeviceTable(){
+  const wrap = document.getElementById('deviceTableWrap');
+  if(!wrap) return;
+
+  let devs = [..._allDevices];
+  if(_devTenantFilter !== 'all') devs = devs.filter(d => d.tenantId === _devTenantFilter);
+  if(_devStatusFilter !== 'all') devs = devs.filter(d => d.status === _devStatusFilter);
+  devs.sort((a,b) => (b.ts||0) - (a.ts||0));
+
+  if(!devs.length){
+    wrap.innerHTML = '<div class="dev-empty">📱 デバイスがありません</div>';
+    return;
+  }
+
+  const getTenantName = (tid) => {
+    const t = _allTenants.find(t2 => t2.id === tid);
+    return t ? `${t.icon} ${t.name}` : tid || '—';
+  };
+
+  const stHtml = (d) => {
+    if(d.status === 'allowed') return `<span class="st-allowed">✅ 許可</span>`;
+    if(d.status === 'blocked') return `<span class="st-blocked">🚫 ブロック</span>`;
+    return `<span class="st-pending">⏳ 承認待ち</span>`;
+  };
+
+  wrap.innerHTML = `<div style="overflow-x:auto;">
+    <table class="dev-table">
+      <thead><tr>
+        <th>テナント</th>
+        <th>デバイスID</th>
+        <th>端末名</th>
+        <th>ユーザー</th>
+        <th>最終アクセス</th>
+        <th>状態</th>
+        <th>操作</th>
+      </tr></thead>
+      <tbody>${devs.map(d => {
+        const tName = getTenantName(d.tenantId);
+        return `<tr>
+          <td><span style="font-size:12px;font-weight:700;">${escHtml(tName)}</span></td>
+          <td><span class="dev-id-chip">${escHtml(d.deviceId)}</span></td>
+          <td style="font-weight:600;color:var(--navy);">${escHtml(d.label || '不明')}</td>
+          <td style="font-size:12px;">${escHtml(d.userName || d.userId || '—')}</td>
+          <td style="font-size:11.5px;color:var(--txs);">${escHtml(d.lastSeen || '—')}</td>
+          <td>${stHtml(d)}</td>
+          <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${d.status !== 'allowed' ? `<button class="btn-dev-allow" onclick="setDevSt('${d.deviceId}','allowed')">✅ 許可</button>` : ''}
+            ${d.status !== 'blocked' ? `<button class="btn-dev-block" onclick="setDevSt('${d.deviceId}','blocked')">🚫 ブロック</button>` : ''}
+            <button class="btn-dev-del" onclick="delDevice('${d.deviceId}')" title="削除">🗑️</button>
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+/* ══ DEVICE ACTIONS ══ */
+function setDevSt(deviceId, status){
+  _waitFb(async () => {
+    try {
+      setSyncStatus('syncing');
+      await window._fs.setDoc(window._fs.doc(window._db, 'devices', deviceId), {status}, {merge: true});
+      showToast(status === 'allowed' ? '✅ デバイスを許可しました' : '🚫 デバイスをブロックしました', status === 'allowed' ? 'ok' : 'error');
+      setSyncStatus('ok');
+    } catch(e){ showToast('エラーが発生しました', 'error'); }
+  });
+}
+function delDevice(deviceId){
+  if(!confirm('このデバイスを削除しますか？')) return;
+  _waitFb(async () => {
+    try {
+      await window._fs.deleteDoc(window._fs.doc(window._db, 'devices', deviceId));
+      showToast('デバイスを削除しました', 'ok');
+    } catch(e){ showToast('削除に失敗しました', 'error'); }
+  });
+}
+
+/* ══ NEW DEVICE NOTIFICATION ══ */
+function notifyNewDevice(tenantName, deviceLabel, deviceId){
+  // Browser notification
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('📱 新しいデバイス承認待ち', {
+      body: `${tenantName} — ${deviceLabel}\nデバイスID: ${deviceId}`,
+      icon: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 64 64\'%3E%3Crect width=\'64\' height=\'64\' rx=\'14\' fill=\'%230d2b4e\'/%3E%3Ctext x=\'50%25\' y=\'56%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'38\' fill=\'white\'%3E%E9%9B%BB%3C/text%3E%3C/svg%3E',
+      tag: deviceId
+    });
+  }
+
+  // In-page alert banner
+  let banner = document.getElementById('newDeviceBanner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'newDeviceBanner';
+    banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1000;background:#fff;border:2px solid #fcd34d;border-radius:14px;box-shadow:0 8px 32px rgba(13,43,78,.2);padding:14px 20px;display:flex;align-items:center;gap:14px;min-width:320px;max-width:480px;animation:fadeUp .3s ease;';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div style="font-size:28px;flex-shrink:0;">📱</div>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:800;color:#92400e;">新しいデバイス承認待ち</div>
+      <div style="font-size:12px;color:#78350f;margin-top:2px;">${escHtml(tenantName)} — ${escHtml(deviceLabel)}</div>
+      <div style="font-size:10px;font-family:monospace;color:#a16207;margin-top:2px;">ID: ${escHtml(deviceId)}</div>
+    </div>
+    <button onclick="approveFromBanner('${deviceId}')" style="padding:7px 14px;background:#0f7c4a;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">✅ 許可</button>
+    <button onclick="document.getElementById('newDeviceBanner').remove()" style="padding:7px 10px;background:transparent;border:1.5px solid #d1d5db;border-radius:9px;font-size:12px;cursor:pointer;color:#6b7280;">✕</button>
+  `;
+  // Auto-dismiss after 30s
+  clearTimeout(banner._t);
+  banner._t = setTimeout(() => { if(banner.parentNode) banner.remove(); }, 30000);
+
+  // Play sound
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
+  } catch(e){}
+}
+
+function approveFromBanner(deviceId){
+  setDevSt(deviceId, 'allowed');
+  const banner = document.getElementById('newDeviceBanner');
+  if(banner) banner.remove();
+}
+
+/* ══ STATS ══ */
+function updateStats(){
+  document.getElementById('statTenants').textContent = _allTenants.length;
+  document.getElementById('statDevices').textContent = _allDevices.length;
+  document.getElementById('statPending').textContent = _allDevices.filter(d => d.status === 'pending').length;
+  document.getElementById('statBlocked').textContent = _allDevices.filter(d => d.status === 'blocked').length;
+}
+
+/* ══ COPY URL ══ */
+function copyUrl(url){
+  const base = window.location.href.replace(/[^/]*$/, '');
+  const full = base + url;
+  navigator.clipboard.writeText(full).then(() => showToast('✅ URLをコピーしました', 'ok')).catch(() => showToast('コピーに失敗しました', 'error'));
+}
+
+/* ══ HELPERS ══ */
+function p2(n){return String(n).padStart(2,'0');}
+function nowStr(){const d=new Date();return `${d.getFullYear()}/${p2(d.getMonth()+1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg, type=''){
+  const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3500);
+}
+
+/* ══ NOTIFICATIONS ══ */
+function requestNotifPermission(){
+  if(!('Notification' in window)){ showToast('このブラウザは通知をサポートしていません', 'warn'); return; }
+  if(Notification.permission === 'granted'){
+    showToast('✅ 通知はすでに有効です', 'ok'); updateNotifBtn(); return;
+  }
+  Notification.requestPermission().then(perm => {
+    if(perm === 'granted'){
+      showToast('✅ 通知を有効にしました', 'ok');
+      new Notification('✅ 通知が有効になりました', {body: '新しいデバイス承認待ちを通知します'});
+    } else {
+      showToast('⚠️ 通知が許可されませんでした', 'warn');
+    }
+    updateNotifBtn();
+  });
+}
+function updateNotifBtn(){
+  const btn = document.getElementById('notifBtn');
+  if(!btn) return;
+  if(!('Notification' in window)){ btn.style.display='none'; return; }
+  if(Notification.permission === 'granted'){
+    btn.textContent = '🔔 通知ON'; btn.style.opacity = '1'; btn.style.background = 'rgba(74,222,128,.2)';
+  } else {
+    btn.textContent = '🔕 通知OFF'; btn.style.opacity = '0.7';
+  }
+}
+
+/* ══ INIT ══ */
+window.addEventListener('load', () => {
+  subscribeAll();
+  subscribeRegistrations();
+  updateNotifBtn();
+  // Auto-request notification permission after 2s
+  setTimeout(() => {
+    if('Notification' in window && Notification.permission === 'default'){
+      requestNotifPermission();
+    }
+  }, 2000);
+});
+</script>
 </body>
 </html>
