@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d2b4e'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-size='38' font-family='serif' fill='white'%3E%E9%9B%BB%3C/text%3E%3C/svg%3E"/>
-
+ 
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -15,7 +15,7 @@ import {
   getFirestore, doc, setDoc, getDoc, collection, collectionGroup,
   onSnapshot, query, where, deleteDoc, addDoc, getDocs, orderBy, limit, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyBY1hisEWTccBZxEDP7cBl8_CnJrCaJ2hM",
   authDomain: "kanie-b23cb.firebaseapp.com",
@@ -31,7 +31,7 @@ window._fs = { doc, setDoc, getDoc, collection, collectionGroup, onSnapshot, que
 window._fbReady = true;
 document.dispatchEvent(new Event('fb-ready'));
 </script>
-
+ 
 <style>
 /* ══════════════════════════════════════════════
    KANIE TENANT MANAGEMENT — standalone admin page
@@ -56,31 +56,85 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-
+ 
 /* ── TOP BAR ── */
-.topbar{position:sticky;top:0;z-index:200;height:56px;background:linear-gradient(135deg,var(--navy3),var(--navy));border-bottom:3px solid var(--orange);display:flex;align-items:center;padding:0 20px;gap:12px;box-shadow:0 2px 16px rgba(13,43,78,.35);}
-.tb-logo{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;}
-.tb-name{color:#fff;font-size:14px;font-weight:800;font-family:'Sora',sans-serif;white-space:nowrap;}
+.topbar{position:sticky;top:0;z-index:200;height:56px;background:linear-gradient(135deg,var(--navy3),var(--navy));border-bottom:3px solid var(--orange);display:flex;align-items:center;padding:0 20px;gap:12px;box-shadow:0 2px 16px rgba(13,43,78,.35);min-width:0;}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.tb-name-wrap{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.tb-name{color:#fff;font-size:14px;font-weight:800;font-family:'Sora',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tb-sub{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;}
-.tb-divider{width:1px;height:28px;background:rgba(255,255,255,.15);}
+.tb-divider{width:1px;height:28px;background:rgba(255,255,255,.15);flex-shrink:0;}
 .tb-caption{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;font-family:'Sora',sans-serif;white-space:nowrap;}
-.tb-spacer{flex:1;}
+.tb-spacer{flex:1;min-width:0;}
 .tb-badge{font-size:12px;background:rgba(232,93,47,.2);color:var(--orange2);border:1px solid rgba(232,93,47,.3);padding:3px 11px;border-radius:99px;font-weight:700;white-space:nowrap;}
-.btn-back{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);padding:5px 13px;border-radius:var(--rads);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px;}
+.btn-back{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);padding:5px 13px;border-radius:var(--rads);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
 .btn-back:hover{background:rgba(255,255,255,.18);}
-
+/* 通知 icon button */
+.btn-notif-icon{
+  position:relative;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.85);
+  width:34px;height:34px;border-radius:8px;
+  font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(255,255,255,.2);
+  line-height:1;padding:0;user-select:none;
+}
+.btn-notif-icon:hover,.btn-notif-icon:active{background:rgba(255,255,255,.25);}
+.notif-icon-badge{
+  position:absolute;top:-4px;right:-4px;
+  min-width:16px;height:16px;
+  background:var(--orange);color:#fff;
+  font-size:9px;font-weight:800;border-radius:99px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 3px;pointer-events:none;
+}
+/* 通知 dropdown panel */
+.notif-drop{
+  position:fixed;top:60px;right:12px;
+  width:min(340px,calc(100vw - 24px));
+  background:var(--sur);border:1px solid var(--bdr);
+  border-radius:var(--rad);box-shadow:var(--shd);
+  z-index:9000;overflow:hidden;
+  animation:fadeUp .2s ease;display:none;
+}
+.notif-drop.open{display:block;}
+.notif-drop-hd{
+  background:linear-gradient(135deg,var(--navy3),var(--navy));
+  padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+}
+.notif-drop-hd span{color:#fff;font-size:12.5px;font-weight:700;}
+.notif-drop-clear{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.8);border-radius:6px;font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;}
+.notif-drop-list{max-height:320px;overflow-y:auto;}
+.notif-drop-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--sur3);cursor:pointer;transition:.15s;}
+.notif-drop-item:hover{background:var(--sur2);}
+.notif-drop-item:last-child{border-bottom:none;}
+.notif-drop-item.unread{background:rgba(13,43,78,.04);}
+.ndi-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.ndi-body{flex:1;min-width:0;}
+.ndi-title{font-size:12px;font-weight:700;color:var(--txb);}
+.ndi-sub{font-size:11px;color:var(--txs);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ndi-time{font-size:10px;color:var(--txl);margin-top:2px;}
+.notif-drop-empty{padding:24px;text-align:center;font-size:12.5px;color:var(--txl);}
+@media(max-width:640px){
+  .notif-drop{top:60px;right:8px;left:8px;width:auto;}
+}
+ 
 /* ── CONTENT ── */
 .content{max-width:960px;margin:0 auto;padding:28px 24px 60px;}
-
+ 
 /* ── PAGE HEADER ── */
 .ph{margin-bottom:22px;}
 .ph h1{font-size:24px;font-weight:800;color:var(--navy);font-family:'Sora',sans-serif;display:flex;align-items:center;gap:10px;}
 .ph p{font-size:13px;color:var(--txs);margin-top:4px;}
 .ph-line{height:3px;width:40px;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:2px;margin-top:10px;}
-
+ 
 /* ── SECTION ── */
 .section-title{font-size:12px;font-weight:700;color:var(--txl);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-
+ 
 /* ── TENANT GRID ── */
 .tenant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:28px;}
 .tenant-card{
@@ -106,7 +160,7 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .tc-url-icon{font-size:12px;flex-shrink:0;}
 .btn-copy{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
 .btn-copy:hover{background:var(--blue);}
-
+ 
 /* PIN section */
 .tc-pin{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .pin-display{
@@ -118,7 +172,7 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 }
 .pin-hidden{filter:blur(6px);cursor:pointer;}
 .pin-toggle{background:none;border:none;font-size:16px;cursor:pointer;flex-shrink:0;}
-
+ 
 /* PIN edit */
 .pin-edit-wrap{display:none;flex-direction:column;gap:6px;margin-bottom:10px;}
 .pin-edit-wrap.show{display:flex;}
@@ -133,14 +187,14 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .btn-sm-g{padding:7px 14px;background:var(--ok);color:#fff;border:none;border-radius:var(--rads);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
 .btn-sm-g:hover{opacity:.9;}
 .btn-sm-c{padding:7px 14px;background:var(--sur2);color:var(--txb);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
-
+ 
 /* Device count */
 .tc-meta{display:flex;gap:8px;flex-wrap:wrap;}
 .tc-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--sur2);border:1px solid var(--bdr);color:var(--txs);}
 .tc-chip.ok{background:var(--ok-bg);color:#065f46;border-color:#6ee7b7;}
 .tc-chip.warn{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
 .tc-chip.err{background:var(--err-bg);color:var(--err);border-color:#fca5a5;}
-
+ 
 /* Add tenant */
 .add-tenant-card{
   background:var(--sur);border:2px dashed var(--bdr2);border-radius:var(--rad);
@@ -156,7 +210,7 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .fld input:focus,.fld select:focus{border-color:var(--blue);background:#fff;}
 .btn-add{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;border:none;border-radius:var(--rads);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.2s;width:fit-content;}
 .btn-add:hover{transform:translateY(-1px);}
-
+ 
 /* ── REGISTRATION CARDS ── */
 .reg-card{
   background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
@@ -183,7 +237,7 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .rsb-pending{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
 .rsb-approved{background:var(--ok-bg);color:#065f46;border:1px solid #6ee7b7;}
 .rsb-rejected{background:var(--err-bg);color:var(--err);border:1px solid #fca5a5;}
-
+ 
 /* ── DEVICE TABLE ── */
 .device-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
 .df-btn{padding:6px 14px;border:1.5px solid var(--bdr);border-radius:99px;font-size:12px;font-weight:600;font-family:inherit;background:var(--sur);color:var(--txs);cursor:pointer;transition:.15s;}
@@ -204,34 +258,43 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .btn-dev-del{padding:4px 9px;background:transparent;color:var(--txl);border:1px solid var(--bdr);border-radius:6px;font-size:13px;cursor:pointer;}
 .btn-dev-del:hover{color:var(--err);border-color:#fca5a5;}
 .dev-empty{text-align:center;padding:30px;color:var(--txl);font-size:13px;}
-
+ 
 /* Tenant filter for device table */
 .tenant-filter-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .tf-label{font-size:11px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;}
 .tf-btn{padding:5px 12px;border:1.5px solid var(--bdr);border-radius:99px;font-size:11.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;background:var(--sur);color:var(--txs);}
 .tf-btn.active{color:#fff;border-color:transparent;}
-
+ 
 /* Stats row */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
-.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:14px 12px;text-align:center;box-shadow:var(--shds);}
-.stat-n{font-size:28px;font-weight:800;color:var(--navy);font-family:'Sora',sans-serif;}
-.stat-l{font-size:10.5px;color:var(--txs);margin-top:3px;}
-
+.stat-card{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:14px 12px;text-align:center;box-shadow:var(--shds);
+  cursor:pointer;transition:all .18s;
+  user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.stat-card:hover{border-color:var(--blue);box-shadow:var(--shd);transform:translateY(-1px);}
+.stat-card.active{background:var(--navy);border-color:var(--navy);box-shadow:0 4px 16px rgba(13,43,78,.3);}
+.stat-card.active .stat-n,.stat-card.active .stat-l{color:#fff!important;}
+.stat-n{font-size:28px;font-weight:800;color:var(--navy);font-family:'Sora',sans-serif;transition:color .18s;}
+.stat-l{font-size:10.5px;color:var(--txs);margin-top:3px;font-weight:600;transition:color .18s;}
+@media(max-width:480px){.stat-n{font-size:20px;}}
+ 
 /* Card wrapper */
 .card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:20px;margin-bottom:16px;box-shadow:var(--shds);animation:fadeUp .2s ease;}
-
+ 
 /* Toast */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none;box-shadow:0 4px 18px rgba(13,43,78,.35);}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 #toast.error{background:var(--err);}
 #toast.ok{background:var(--ok);}
 #toast.warn{background:#b45309;}
-
+ 
 /* Sync indicator */
 #syncDot{width:6px;height:6px;border-radius:50%;background:#6ee7b7;display:inline-block;}
 #syncDot.syncing{background:#fbbf24;animation:pulse .8s ease infinite;}
 #syncDot.error{background:#f87171;}
-
+ 
 /* Responsive */
 @media(max-width:640px){
   .content{padding:16px 14px 60px;}
@@ -240,54 +303,78 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
   .tenant-grid{grid-template-columns:1fr;}
   .stat-n{font-size:22px;}
   .ph h1{font-size:18px;}
+  /* Topbar mobile */
+  .topbar{padding:0 10px;gap:6px;}
+  .tb-divider{display:none!important;}
+  .tb-caption{display:none!important;}
+  .tb-badge{display:none!important;}
+  .tb-sub{display:none!important;}
+  .tb-spacer{min-width:0;}
+  .btn-back span{display:none;}
+  .btn-back{padding:5px 9px;font-size:12px;}
+  #syncWrap{display:none!important;}
 }
 </style>
 </head>
 <body>
-
+ 
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="tb-logo">⚡</div>
-  <div>
+  <div class="tb-name-wrap">
     <div class="tb-name">カニエ電機株式会社</div>
     <div class="tb-sub">KANIE ELECTRIC CO., LTD</div>
   </div>
   <div class="tb-divider"></div>
   <div class="tb-caption">テナント管理</div>
-  <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.7);margin-left:8px;">
+  <div id="syncWrap" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.7);margin-left:8px;flex-shrink:0;">
     <span id="syncDot"></span>
     <span id="syncTxt">同期済み</span>
   </div>
   <div class="tb-spacer"></div>
-  <button id="notifBtn" onclick="requestNotifPermission()" style="background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);padding:4px 11px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;" title="通知を有効にする">🔔 通知ON</button>
   <div class="tb-badge">🔐 管理者専用</div>
-  <a href="index_web_v6.html" class="btn-back" style="margin-left:8px;">← メインに戻る</a>
+  <!-- 通知ボタン (icon style) -->
+  <button class="btn-notif-icon" id="notifIconBtn" onclick="toggleNotifDrop()" title="通知">
+    🔔<span class="notif-icon-badge" id="notifIconBadge" style="display:none;"></span>
+  </button>
+  <a href="index_web_v6.html" class="btn-back"><span>←</span><span> メインに戻る</span></a>
 </div>
-
+ 
+<!-- 通知パネル -->
+<div class="notif-drop" id="notifDrop">
+  <div class="notif-drop-hd">
+    <span>🔔 通知</span>
+    <button class="notif-drop-clear" onclick="clearAdminNotifs()">すべて既読</button>
+  </div>
+  <div class="notif-drop-list" id="notifDropList">
+    <div class="notif-drop-empty">通知はありません</div>
+  </div>
+</div>
+ 
 <!-- CONTENT -->
 <div class="content">
-
+ 
   <!-- Page Header -->
   <div class="ph">
     <h1>🏢 テナント管理ダッシュボード</h1>
     <p>各会社のリンク発行・PINコード設定・デバイス承認を管理します</p>
     <div class="ph-line"></div>
   </div>
-
-  <!-- Stats -->
+ 
+  <!-- Stats (clickable filters) -->
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-n" id="statTenants">0</div><div class="stat-l">テナント数</div></div>
-    <div class="stat-card"><div class="stat-n" id="statDevices">0</div><div class="stat-l">登録デバイス</div></div>
-    <div class="stat-card"><div class="stat-n" id="statPending" style="color:#d97706;">0</div><div class="stat-l">承認待ち</div></div>
-    <div class="stat-card"><div class="stat-n" id="statBlocked" style="color:var(--err);">0</div><div class="stat-l">ブロック</div></div>
+    <div class="stat-card active" id="scAll" onclick="filterByStatCard('all',this)"><div class="stat-n" id="statTenants">0</div><div class="stat-l">登録デバイス</div></div>
+    <div class="stat-card" id="scPending" onclick="filterByStatCard('pending',this)"><div class="stat-n" id="statPending" style="color:#d97706;">0</div><div class="stat-l">承認待ち</div></div>
+    <div class="stat-card" id="scAllowed" onclick="filterByStatCard('allowed',this)"><div class="stat-n" id="statAllowed" style="color:var(--ok);">0</div><div class="stat-l">許可済み</div></div>
+    <div class="stat-card" id="scBlocked" onclick="filterByStatCard('blocked',this)"><div class="stat-n" id="statBlocked" style="color:var(--err);">0</div><div class="stat-l">ブロック</div></div>
   </div>
-
+ 
   <!-- ══ TENANT LIST ══ -->
   <div class="section-title">🏢 テナント一覧</div>
   <div class="tenant-grid" id="tenantGrid">
     <div style="text-align:center;padding:40px;color:var(--txl);font-size:13px;grid-column:1/-1;">⏳ 読み込み中…</div>
   </div>
-
+ 
   <!-- ══ REGISTRATIONS ══ -->
   <div style="margin-bottom:24px;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
@@ -298,7 +385,7 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
       <div style="text-align:center;padding:20px;color:var(--txl);font-size:13px;">⏳ 読み込み中…</div>
     </div>
   </div>
-
+ 
   <!-- ══ ADD TENANT ══ -->
   <div class="section-title">➕ テナントを追加</div>
   <div class="add-tenant-card">
@@ -326,32 +413,21 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
     </div>
     <button class="btn-add" onclick="addTenant()">➕ テナントを追加する</button>
   </div>
-
+ 
   <!-- ══ DEVICE MANAGEMENT ══ -->
   <div style="margin-top:32px;">
     <div class="section-title">📱 デバイス管理（全テナント）</div>
     <div class="card">
-      <!-- Tenant filter -->
-      <div class="tenant-filter-wrap">
-        <span class="tf-label">テナントで絞り込み:</span>
-        <button class="tf-btn active" style="background:var(--navy);border-color:var(--navy);color:#fff;" onclick="filterDevices('all',this)">すべて</button>
-        <div id="tenantFilterBtns" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-      </div>
-      <!-- Status filter -->
-      <div class="device-filter">
-        <button class="df-btn active" onclick="filterDevStatus('all',this)">すべて</button>
-        <button class="df-btn" onclick="filterDevStatus('pending',this)">⏳ 承認待ち</button>
-        <button class="df-btn" onclick="filterDevStatus('allowed',this)">✅ 許可済み</button>
-        <button class="df-btn" onclick="filterDevStatus('blocked',this)">🚫 ブロック</button>
-      </div>
+      <!-- フィルターはStats cardで操作 -->
+      <div id="tenantFilterBtns" style="display:none;"></div>
       <div id="deviceTableWrap"><div class="dev-empty">⏳ 読み込み中…</div></div>
     </div>
   </div>
-
+ 
 </div><!-- /content -->
-
+ 
 <div id="toast"></div>
-
+ 
 <!-- ══════════════════════════════════════════
    JAVASCRIPT
 ══════════════════════════════════════════ -->
@@ -361,7 +437,7 @@ function _waitFb(cb){
   if(window._fbReady) cb();
   else document.addEventListener('fb-ready', cb, {once:true});
 }
-
+ 
 /* ══ STATE ══ */
 let _allDevices = [];
 let _allTenants = [];
@@ -369,7 +445,7 @@ let _devUnsub = null;
 let _tenantUnsub = null;
 let _devTenantFilter = 'all';
 let _devStatusFilter = 'all';
-
+ 
 /* ══ HARDCODED TENANTS (initial seed) ══
    After first load, tenants are stored in Firestore /tenants/ */
 const SEED_TENANTS = [
@@ -389,11 +465,11 @@ const SEED_TENANTS = [
     url: 'kaisha-c.html', active: true
   },
 ];
-
+ 
 /* ══ REGISTRATIONS ══ */
 let _allRegs = [];
 let _regUnsub = null;
-
+ 
 function subscribeRegistrations(){
   _waitFb(() => {
     const col = window._fs.collection(window._db, 'registrations');
@@ -402,14 +478,14 @@ function subscribeRegistrations(){
       snap => {
         const prev = _allRegs.map(r => r.tenantId);
         _allRegs = snap.docs.map(d => ({...d.data(), _docId: d.id}));
-
+ 
         // Notify new pending registrations
         _allRegs.forEach(r => {
           if(r.status === 'pending' && !prev.includes(r.tenantId) && prev.length > 0){
             notifyNewRegistration(r);
           }
         });
-
+ 
         renderRegistrations();
         updateRegBadge();
       },
@@ -417,7 +493,7 @@ function subscribeRegistrations(){
     );
   });
 }
-
+ 
 function updateRegBadge(){
   const pending = _allRegs.filter(r => r.status === 'pending').length;
   const badge = document.getElementById('regBadge');
@@ -429,16 +505,16 @@ function updateRegBadge(){
   const el = document.getElementById('statPending');
   if(el) el.textContent = _allDevices.filter(d => d.status === 'pending').length + pending;
 }
-
+ 
 function renderRegistrations(){
   const el = document.getElementById('regList');
   if(!el) return;
-
+ 
   if(!_allRegs.length){
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--txl);font-size:13px;">📭 登録申請はありません</div>';
     return;
   }
-
+ 
   el.innerHTML = _allRegs.map(r => {
     const statusClass = r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : '';
     const statusBadge = r.status === 'approved'
@@ -446,21 +522,21 @@ function renderRegistrations(){
       : r.status === 'rejected'
       ? '<span class="reg-status-badge rsb-rejected">🚫 却下</span>'
       : '<span class="reg-status-badge rsb-pending">⏳ 承認待ち</span>';
-
+ 
     const approveBtn = r.status === 'pending'
       ? `<button class="btn-reg-approve" onclick="approveRegistration('${escHtml(r.tenantId)}','${r._docId}')">✅ 承認・テナント有効化</button>`
       : '';
     const rejectBtn = r.status === 'pending'
       ? `<button class="btn-reg-reject" onclick="rejectRegistration('${r._docId}')">🚫 却下</button>`
       : '';
-
+ 
     const fullUrl = `${window.location.href.replace(/[^/]*$/, '')}${escHtml(r.url||'')}`;
-
+ 
     // Color swatch
     const colorSwatch = r.color
       ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${escHtml(r.color)};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin-right:4px;"></span>`
       : '';
-
+ 
     return `<div class="reg-card ${statusClass}">
       <div class="reg-top">
         <div>
@@ -472,7 +548,7 @@ function renderRegistrations(){
           <span class="reg-date">${r.registeredAt||r.ts||'—'}</span>
         </div>
       </div>
-
+ 
       <!-- 会社の詳細情報 -->
       <div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--rads);padding:10px 13px;margin-bottom:10px;font-size:12.5px;">
         <div style="font-size:10.5px;font-weight:700;color:var(--txl);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">📋 登録情報</div>
@@ -488,7 +564,7 @@ function renderRegistrations(){
         </div>
         ${r.note ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);"><span style="color:var(--txl);font-size:11px;">📝 備考</span><br><span style="color:var(--txb);">${escHtml(r.note)}</span></div>` : ''}
       </div>
-
+ 
       <div class="reg-actions">
         ${approveBtn}
         ${rejectBtn}
@@ -499,7 +575,7 @@ function renderRegistrations(){
     </div>`;
   }).join('');
 }
-
+ 
 async function approveRegistration(tenantId, docId){
   if(!confirm(`テナント「${tenantId}」を承認してよろしいですか？
 承認するとテナントが有効化され、利用可能になります。`)) return;
@@ -523,7 +599,7 @@ async function approveRegistration(tenantId, docId){
     } catch(e){ console.error(e); showToast('エラーが発生しました', 'error'); setSyncStatus('error'); }
   });
 }
-
+ 
 async function rejectRegistration(docId){
   if(!confirm('この申請を却下しますか？')) return;
   _waitFb(async () => {
@@ -537,7 +613,7 @@ async function rejectRegistration(docId){
     } catch(e){ showToast('エラーが発生しました', 'error'); }
   });
 }
-
+ 
 async function deleteRegistration(docId, name){
   if(!confirm(`「${name}」の登録申請を完全に削除しますか？\nこの操作は元に戻せません。`)) return;
   _waitFb(async () => {
@@ -549,27 +625,27 @@ async function deleteRegistration(docId, name){
     } catch(e){ console.error(e); showToast('削除に失敗しました', 'error'); }
   });
 }
-
+ 
 function copyRegUrl(url){
   navigator.clipboard.writeText(url)
     .then(() => showToast('✅ URLをコピーしました', 'ok'))
     .catch(() => showToast('コピーに失敗しました', 'error'));
 }
-
+ 
 // ══ PORTAL GENERATION (regenerate portal HTML for download) ══
 const PORTAL_THEMES = {'#1a4a2e': {'green2': '#2d7a4f', 'green3': '#0e3320', 'lime': '#4ade80', 'lime2': '#86efac'}, '#0d2b4e': {'green2': '#1a3f6b', 'green3': '#071933', 'lime': '#60a5fa', 'lime2': '#93c5fd'}, '#7c3aed': {'green2': '#5a3490', 'green3': '#3b1f6b', 'lime': '#c084fc', 'lime2': '#d8b4fe'}, '#c2410c': {'green2': '#9a3409', 'green3': '#7c2d12', 'lime': '#fb923c', 'lime2': '#fdba74'}, '#0369a1': {'green2': '#0284c7', 'green3': '#0c4a6e', 'lime': '#38bdf8', 'lime2': '#7dd3fc'}, '#be185d': {'green2': '#9d174d', 'green3': '#831843', 'lime': '#f472b6', 'lime2': '#f9a8d4'}};
-
+ 
 function b64ToStrAdmin(b64){
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
   return new TextDecoder('utf-8').decode(bytes);
 }
-
+ 
 function generateSlugAdmin(name){
   return (name||'company').toLowerCase().replace(/[\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]+/g,'').replace(/[^a-z0-9]/g,'').slice(0,16)||('co'+Date.now().toString(36).slice(-4));
 }
-
+ 
 // Fetch TEMPLATE_B64 from register.html if available, else use stored
 async function buildPortalHtmlForReg(reg){
   // reg contains: name, fullName, icon, color, pin, tenantId, url
@@ -585,7 +661,7 @@ async function buildPortalHtmlForReg(reg){
     prefix,
     slug
   };
-
+ 
   // We need TEMPLATE_B64 — fetch register.html to get it
   if(!window._portalTemplate){
     try {
@@ -595,16 +671,16 @@ async function buildPortalHtmlForReg(reg){
       if(m) window._portalTemplate = m[1];
     } catch(e){ console.warn('Could not fetch register.html template:', e); }
   }
-
+ 
   if(!window._portalTemplate){
     showToast('⚠️ テンプレートが取得できませんでした。register.htmlと同じフォルダに配置してください。', 'error');
     return null;
   }
-
+ 
   let html = b64ToStrAdmin(window._portalTemplate);
   const th = PORTAL_THEMES[cfg.color] || PORTAL_THEMES['#1a4a2e'];
   const shortUpper = cfg.short.toUpperCase().replace(/\s/g,'-');
-
+ 
   html = html.replace('__COMMENT__', cfg.short + ' PORTAL');
   html = html.replace('__CSS_COLORS__',
     `:root {\n  --green:   ${cfg.color};\n  --green2:  ${th.green2};\n  --green3:  ${th.green3};\n  --lime:    ${th.lime};\n  --lime2:   ${th.lime2};`
@@ -635,10 +711,10 @@ async function buildPortalHtmlForReg(reg){
   html = html.replace('__LOG_DEV__', `logLoginEvent('${cfg.tenantId}', TENANT_NAME, devData.status === 'allowed' ? 'success' : 'blocked');`);
   html = html.replace('__LOG_RECHECK__', `logLoginEvent('${cfg.tenantId}', TENANT_NAME, status === 'allowed' ? 'success' : 'blocked');`);
   html = html.replace('__EXCEL_NAME__', `依頼履歴_${cfg.short}_`);
-
+ 
   return { html, filename: cfg.url || `portal-${slug}.html` };
 }
-
+ 
 async function downloadPortalForReg(tenantId){
   const reg = _allRegs.find(r => r.tenantId === tenantId);
   if(!reg){ showToast('⚠️ 登録情報が見つかりません', 'error'); return; }
@@ -652,19 +728,21 @@ async function downloadPortalForReg(tenantId){
   URL.revokeObjectURL(a.href);
   showToast('✅ ポータルファイルをダウンロードしました', 'ok');
 }
-
+ 
 function notifyNewRegistration(reg){
+  // In-app notification
+  addAdminNotif('📝', '新規登録申請: ' + (reg.name||''), reg.contactName||'');
   // Banner
   let banner = document.getElementById('newRegBanner');
   if(!banner){ banner = document.createElement('div'); banner.id='newRegBanner'; banner.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1000;background:#fff;border:2px solid #fbbf24;border-radius:14px;box-shadow:0 8px 32px rgba(13,43,78,.22);padding:14px 20px;display:flex;align-items:center;gap:14px;min-width:320px;max-width:480px;animation:fadeUp .3s ease;'; document.body.appendChild(banner); }
   banner.innerHTML = `<div style="font-size:26px;flex-shrink:0;">📝</div><div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#92400e;">新しい取引先登録申請</div><div style="font-size:12px;color:#78350f;margin-top:2px;">${escHtml(reg.name)} — ${escHtml(reg.contactName||'')}</div><div style="font-size:10.5px;color:#a16207;margin-top:1px;">${escHtml(reg.contactEmail||'')}</div></div><button onclick="document.getElementById('newRegBanner').remove()" style="padding:7px 10px;background:transparent;border:1.5px solid #d1d5db;border-radius:9px;font-size:12px;cursor:pointer;color:#6b7280;">✕</button>`;
   clearTimeout(banner._t); banner._t = setTimeout(() => { if(banner.parentNode) banner.remove(); }, 30000);
-
+ 
   // Browser notification
   if('Notification' in window && Notification.permission === 'granted'){
     new Notification('📝 新しい取引先登録申請', { body: `${reg.name} — ${reg.contactName}`, tag: reg.tenantId });
   }
-
+ 
   // Sound
   try {
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
@@ -677,7 +755,7 @@ function notifyNewRegistration(reg){
     });
   } catch(e){}
 }
-
+ 
 /* ══ SYNC STATUS ══ */
 function setSyncStatus(s){
   const dot = document.getElementById('syncDot');
@@ -688,7 +766,7 @@ function setSyncStatus(s){
   else if(s === 'error'){ dot.classList.add('error'); if(txt) txt.textContent = 'エラー'; }
   else { if(txt) txt.textContent = '同期済み'; }
 }
-
+ 
 /* ══ LOAD TENANTS FROM FIRESTORE ══ */
 function subscribeAll(){
   setSyncStatus('syncing');
@@ -706,14 +784,14 @@ function subscribeAll(){
       }
       setSyncStatus('ok');
     }, e => { console.error(e); setSyncStatus('error'); });
-
+ 
     // Subscribe devices
     let _firstDeviceLoad = true;
     const devCol = window._fs.collection(window._db, 'devices');
     _devUnsub = window._fs.onSnapshot(devCol, snap => {
       const prevPendingIds = new Set(_allDevices.filter(d => d.status === 'pending').map(d => d.deviceId));
       _allDevices = snap.docs.map(d => d.data());
-
+ 
       // Detect NEW pending devices (not on first load)
       if(!_firstDeviceLoad){
         const newPending = _allDevices.filter(d =>
@@ -726,14 +804,14 @@ function subscribeAll(){
         }
       }
       _firstDeviceLoad = false;
-
+ 
       renderDeviceTable();
       updateStats();
       setSyncStatus('ok');
     }, e => { console.error(e); setSyncStatus('error'); });
   });
 }
-
+ 
 /* ══ NEW REQUEST NOTIFICATION ════════════════════════════
    Subscribe to ALL tenant reqs via collectionGroup.
    Notify staff when a new form request arrives.
@@ -741,7 +819,7 @@ function subscribeAll(){
 let _reqUnsubAdmin = null;
 const _seenReqIds = new Set();
 let _reqFirstLoad = true;
-
+ 
 function subscribeAllReqs(){
   _waitFb(() => {
     try {
@@ -764,11 +842,13 @@ function subscribeAllReqs(){
     } catch(e){ console.warn('subscribeAllReqs error:', e); }
   });
 }
-
+ 
 function notifyNewRequest(req){
   const tName = req.kaishaFull || req.kaisha || req.tenantId || '不明';
   const msg = `${req.shiji || ''} / ${req.kiki || ''}`;
-
+  // In-app notification
+  addAdminNotif('📋', '新しい作業依頼: ' + tName, msg);
+ 
   // ── In-page banner ──
   let banner = document.getElementById('newReqBanner');
   if(!banner){
@@ -787,7 +867,7 @@ function notifyNewRequest(req){
     <button onclick="document.getElementById('newReqBanner').remove()" style="padding:7px 10px;background:transparent;border:1.5px solid #d1d5db;border-radius:9px;font-size:12px;cursor:pointer;color:#6b7280;flex-shrink:0;">✕</button>`;
   clearTimeout(banner._t);
   banner._t = setTimeout(() => { if(banner.parentNode) banner.remove(); }, 20000);
-
+ 
   // ── Browser notification (works on desktop & Android Chrome) ──
   if('Notification' in window && Notification.permission === 'granted'){
     const n = new Notification(`📋 新依頼: ${tName}`, {
@@ -798,7 +878,7 @@ function notifyNewRequest(req){
     });
     n.onclick = () => { window.focus(); n.close(); };
   }
-
+ 
   // ── Sound (double beep = new request) ──
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -813,7 +893,7 @@ function notifyNewRequest(req){
     });
   } catch(e){}
 }
-
+ 
 async function seedTenants(){
   _waitFb(async () => {
     try {
@@ -823,7 +903,7 @@ async function seedTenants(){
     } catch(e){ console.error('seedTenants', e); }
   });
 }
-
+ 
 /* ══ RENDER TENANT CARDS ══ */
 function renderTenants(){
   const grid = document.getElementById('tenantGrid');
@@ -836,7 +916,7 @@ function renderTenants(){
     const allowed = devs.filter(d => d.status === 'allowed').length;
     const pending = devs.filter(d => d.status === 'pending').length;
     const blocked = devs.filter(d => d.status === 'blocked').length;
-
+ 
     return `<div class="tenant-card ${t.active ? 'active' : 'inactive'}">
       <div class="tc-header">
         <div class="tc-icon" style="background:${t.color}20;border:2px solid ${t.color}30;">${t.icon || '🏢'}</div>
@@ -849,14 +929,14 @@ function renderTenants(){
           <span style="font-size:10px;color:var(--txs);">${t.active?'有効':'無効'}</span>
         </div>
       </div>
-
+ 
       <!-- URL -->
       <div class="tc-url">
         <span class="tc-url-icon">🔗</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(t.url||t.id+'.html')}">${escHtml(t.url || t.id + '.html')}</span>
         <button class="btn-copy" onclick="copyUrl('${escHtml(t.url||t.id+'.html')}')">コピー</button>
       </div>
-
+ 
       <!-- PIN -->
       <div style="margin-bottom:8px;">
         <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;">🔑 PINコード</div>
@@ -876,7 +956,7 @@ function renderTenants(){
           <div style="font-size:10.5px;color:var(--txs);">⚠️ PINを変更すると既存のセッションは無効になります</div>
         </div>
       </div>
-
+ 
       <!-- Device counts -->
       <div class="tc-meta">
         <span class="tc-chip ok">✅ 許可 ${allowed}</span>
@@ -884,7 +964,7 @@ function renderTenants(){
         ${blocked > 0 ? `<span class="tc-chip err">🚫 ブロック ${blocked}</span>` : ''}
         ${!devs.length ? '<span class="tc-chip">📱 デバイスなし</span>' : ''}
       </div>
-
+ 
       <!-- Actions -->
       <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
         <button onclick="filterDevices('${t.id}',null)" style="padding:5px 11px;background:var(--sur2);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">📱 デバイスを見る</button>
@@ -893,7 +973,7 @@ function renderTenants(){
     </div>`;
   }).join('');
 }
-
+ 
 /* ══ PIN MANAGEMENT ══ */
 const _pinVisible = {};
 function togglePin(tenantId){
@@ -926,7 +1006,7 @@ async function savePin(tenantId){
     } catch(e){ console.error(e); showToast('エラーが発生しました', 'error'); setSyncStatus('error'); }
   });
 }
-
+ 
 /* ══ TENANT ACTIVE TOGGLE ══ */
 function toggleTenantActive(tenantId, newActive){
   _waitFb(async () => {
@@ -936,7 +1016,7 @@ function toggleTenantActive(tenantId, newActive){
     } catch(e){ showToast('エラーが発生しました', 'error'); }
   });
 }
-
+ 
 /* ══ ADD TENANT ══ */
 async function addTenant(){
   const id = document.getElementById('newTenantId').value.trim().toUpperCase();
@@ -945,11 +1025,11 @@ async function addTenant(){
   const pin = document.getElementById('newTenantPin').value.trim();
   const icon = document.getElementById('newTenantIcon').value.trim() || '🏢';
   const color = document.getElementById('newTenantColor').value;
-
+ 
   if(!id || !name || !pin){ showToast('⚠️ ID・会社名・PINは必須です', 'error'); return; }
   if(!/^\d{4}$/.test(pin)){ showToast('⚠️ PINは4桁の数字を入力してください', 'error'); return; }
   if(!/^[A-Z0-9-]+$/.test(id)){ showToast('⚠️ IDは英大文字・数字・ハイフンのみ使用可', 'error'); return; }
-
+ 
   _waitFb(async () => {
     try {
       setSyncStatus('syncing');
@@ -966,7 +1046,7 @@ async function addTenant(){
     } catch(e){ console.error(e); showToast('テナントの追加に失敗しました', 'error'); setSyncStatus('error'); }
   });
 }
-
+ 
 /* ══ DEVICE TABLE ══ */
 function buildTenantFilterBtns(){
   const wrap = document.getElementById('tenantFilterBtns');
@@ -975,7 +1055,7 @@ function buildTenantFilterBtns(){
     `<button class="tf-btn" style="border-color:${t.color};color:${t.color};" onclick="filterDevices('${t.id}',this)">${t.icon} ${t.name}</button>`
   ).join('');
 }
-
+ 
 function filterDevices(tenantId, btn){
   _devTenantFilter = tenantId;
   // Reset all tenant filter btns
@@ -995,39 +1075,39 @@ function filterDevices(tenantId, btn){
   // Scroll to device section
   document.getElementById('deviceTableWrap').scrollIntoView({behavior:'smooth',block:'start'});
 }
-
+ 
 function filterDevStatus(status, btn){
   _devStatusFilter = status;
   document.querySelectorAll('.df-btn').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderDeviceTable();
 }
-
+ 
 function renderDeviceTable(){
   const wrap = document.getElementById('deviceTableWrap');
   if(!wrap) return;
-
+ 
   let devs = [..._allDevices];
   if(_devTenantFilter !== 'all') devs = devs.filter(d => d.tenantId === _devTenantFilter);
   if(_devStatusFilter !== 'all') devs = devs.filter(d => d.status === _devStatusFilter);
   devs.sort((a,b) => (b.ts||0) - (a.ts||0));
-
+ 
   if(!devs.length){
     wrap.innerHTML = '<div class="dev-empty">📱 デバイスがありません</div>';
     return;
   }
-
+ 
   const getTenantName = (tid) => {
     const t = _allTenants.find(t2 => t2.id === tid);
     return t ? `${t.icon} ${t.name}` : tid || '—';
   };
-
+ 
   const stHtml = (d) => {
     if(d.status === 'allowed') return `<span class="st-allowed">✅ 許可</span>`;
     if(d.status === 'blocked') return `<span class="st-blocked">🚫 ブロック</span>`;
     return `<span class="st-pending">⏳ 承認待ち</span>`;
   };
-
+ 
   wrap.innerHTML = `<div style="overflow-x:auto;">
     <table class="dev-table">
       <thead><tr>
@@ -1058,7 +1138,7 @@ function renderDeviceTable(){
     </table>
   </div>`;
 }
-
+ 
 /* ══ DEVICE ACTIONS ══ */
 function setDevSt(deviceId, status){
   _waitFb(async () => {
@@ -1079,9 +1159,11 @@ function delDevice(deviceId){
     } catch(e){ showToast('削除に失敗しました', 'error'); }
   });
 }
-
+ 
 /* ══ NEW DEVICE NOTIFICATION ══ */
 function notifyNewDevice(tenantName, deviceLabel, deviceId){
+  // In-app notification
+  addAdminNotif('📱', '新デバイス承認待ち', tenantName + ' — ' + deviceLabel);
   // Browser notification
   if('Notification' in window && Notification.permission === 'granted'){
     new Notification('📱 新しいデバイス承認待ち', {
@@ -1090,7 +1172,7 @@ function notifyNewDevice(tenantName, deviceLabel, deviceId){
       tag: deviceId
     });
   }
-
+ 
   // In-page alert banner
   let banner = document.getElementById('newDeviceBanner');
   if(!banner){
@@ -1112,7 +1194,7 @@ function notifyNewDevice(tenantName, deviceLabel, deviceId){
   // Auto-dismiss after 30s
   clearTimeout(banner._t);
   banner._t = setTimeout(() => { if(banner.parentNode) banner.remove(); }, 30000);
-
+ 
   // Play sound
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1125,28 +1207,42 @@ function notifyNewDevice(tenantName, deviceLabel, deviceId){
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
   } catch(e){}
 }
-
+ 
 function approveFromBanner(deviceId){
   setDevSt(deviceId, 'allowed');
   const banner = document.getElementById('newDeviceBanner');
   if(banner) banner.remove();
 }
-
+ 
 /* ══ STATS ══ */
 function updateStats(){
-  document.getElementById('statTenants').textContent = _allTenants.length;
-  document.getElementById('statDevices').textContent = _allDevices.length;
+  document.getElementById('statTenants').textContent = _allDevices.length;
   document.getElementById('statPending').textContent = _allDevices.filter(d => d.status === 'pending').length;
+  const ae = document.getElementById('statAllowed');
+  if(ae) ae.textContent = _allDevices.filter(d => d.status === 'allowed').length;
   document.getElementById('statBlocked').textContent = _allDevices.filter(d => d.status === 'blocked').length;
 }
-
+ 
+function filterByStatCard(status, cardEl){
+  // Update active card
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+  if(cardEl) cardEl.classList.add('active');
+  // Apply status filter and reset tenant filter
+  _devStatusFilter = status;
+  _devTenantFilter = 'all';
+  renderDeviceTable();
+  // Scroll to device table
+  const wrap = document.getElementById('deviceTableWrap');
+  if(wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+ 
 /* ══ COPY URL ══ */
 function copyUrl(url){
   const base = window.location.href.replace(/[^/]*$/, '');
   const full = base + url;
   navigator.clipboard.writeText(full).then(() => showToast('✅ URLをコピーしました', 'ok')).catch(() => showToast('コピーに失敗しました', 'error'));
 }
-
+ 
 /* ══ HELPERS ══ */
 function p2(n){return String(n).padStart(2,'0');}
 function nowStr(){const d=new Date();return `${d.getFullYear()}/${p2(d.getMonth()+1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;}
@@ -1155,46 +1251,88 @@ function showToast(msg, type=''){
   const t = document.getElementById('toast'); t.textContent = msg; t.className = 'show' + (type ? ' ' + type : '');
   clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3500);
 }
-
-/* ══ NOTIFICATIONS ══ */
+ 
+/* ══ IN-APP NOTIFICATION SYSTEM ══ */
+let _adminNotifs = [], _adminNotifUnread = 0;
+ 
+function addAdminNotif(icon, title, sub){
+  const now = new Date();
+  const t = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  _adminNotifs.unshift({icon, title, sub, time:t, unread:true});
+  if(_adminNotifs.length > 50) _adminNotifs = _adminNotifs.slice(0, 50);
+  _adminNotifUnread++;
+  updateNotifIconBadge();
+  renderNotifDrop();
+}
+ 
+function updateNotifIconBadge(){
+  const b = document.getElementById('notifIconBadge');
+  if(!b) return;
+  if(_adminNotifUnread > 0){ b.style.display='flex'; b.textContent=_adminNotifUnread>9?'9+':_adminNotifUnread; }
+  else b.style.display='none';
+}
+ 
+function toggleNotifDrop(){
+  const p = document.getElementById('notifDrop');
+  if(!p) return;
+  if(p.classList.contains('open')){
+    p.classList.remove('open');
+  } else {
+    p.classList.add('open');
+    _adminNotifUnread = 0;
+    _adminNotifs.forEach(n => n.unread = false);
+    updateNotifIconBadge();
+    renderNotifDrop();
+  }
+}
+ 
+function clearAdminNotifs(){
+  _adminNotifs = []; _adminNotifUnread = 0;
+  updateNotifIconBadge(); renderNotifDrop();
+}
+ 
+function renderNotifDrop(){
+  const el = document.getElementById('notifDropList');
+  if(!el) return;
+  if(!_adminNotifs.length){ el.innerHTML='<div class="notif-drop-empty">通知はありません</div>'; return; }
+  el.innerHTML = _adminNotifs.map(n => `<div class="notif-drop-item ${n.unread?'unread':''}">
+    <div class="ndi-icon">${n.icon}</div>
+    <div class="ndi-body">
+      <div class="ndi-title">${escHtml(n.title)}</div>
+      <div class="ndi-sub">${escHtml(n.sub)}</div>
+      <div class="ndi-time">${n.time}</div>
+    </div></div>`).join('');
+}
+ 
+// Close notif panel on outside click
+document.addEventListener('click', function(e){
+  const p = document.getElementById('notifDrop');
+  const b = document.getElementById('notifIconBtn');
+  if(p && b && !p.contains(e.target) && !b.contains(e.target)) p.classList.remove('open');
+});
+ 
+/* ══ BROWSER NOTIFICATION PERMISSION ══ */
 function requestNotifPermission(){
-  if(!('Notification' in window)){ showToast('このブラウザは通知をサポートしていません。Android Chrome または PC を使用してください。', 'warn'); return; }
-  if(Notification.permission === 'granted'){
-    showToast('✅ 通知はすでに有効です', 'ok'); updateNotifBtn(); return;
-  }
-  if(Notification.permission === 'denied'){
-    showToast('⚠️ 通知がブロックされています。ブラウザの設定から許可してください。', 'warn'); return;
-  }
+  if(!('Notification' in window)){ showToast('このブラウザは通知をサポートしていません', 'warn'); return; }
+  if(Notification.permission === 'granted'){ showToast('✅ 通知はすでに有効です', 'ok'); return; }
+  if(Notification.permission === 'denied'){ showToast('⚠️ ブラウザ設定から通知を許可してください', 'warn'); return; }
   Notification.requestPermission().then(perm => {
     if(perm === 'granted'){
-      showToast('✅ 通知を有効にしました！新しい依頼・デバイスを通知します', 'ok');
+      showToast('✅ ブラウザ通知を有効にしました', 'ok');
       new Notification('✅ 通知が有効になりました', {body: '新しい作業依頼・デバイス承認待ちを通知します'});
     } else {
-      showToast('⚠️ 通知が許可されませんでした。設定から「通知を許可」してください。', 'warn');
+      showToast('⚠️ 通知が許可されませんでした', 'warn');
     }
-    updateNotifBtn();
   });
 }
-function updateNotifBtn(){
-  const btn = document.getElementById('notifBtn');
-  if(!btn) return;
-  if(!('Notification' in window)){ btn.style.display='none'; return; }
-  if(Notification.permission === 'granted'){
-    btn.textContent = '🔔 通知ON'; btn.style.opacity = '1'; btn.style.background = 'rgba(74,222,128,.2)'; btn.title='通知は有効です';
-  } else if(Notification.permission === 'denied'){
-    btn.textContent = '🔕 通知ブロック中'; btn.style.opacity = '0.6'; btn.title='ブラウザ設定で許可してください';
-  } else {
-    btn.textContent = '🔕 通知OFF（タップで有効化）'; btn.style.opacity = '0.7'; btn.title='タップして通知を有効にする';
-  }
-}
-
+function updateNotifBtn(){ /* kept for compatibility */ }
+ 
 /* ══ INIT ══ */
 window.addEventListener('load', () => {
   subscribeAll();
   subscribeRegistrations();
   subscribeAllReqs();
-  updateNotifBtn();
-  // Auto-request notification permission after 2s
+  // Auto-request browser notification permission after 2s
   setTimeout(() => {
     if('Notification' in window && Notification.permission === 'default'){
       requestNotifPermission();
