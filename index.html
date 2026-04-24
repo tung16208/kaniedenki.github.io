@@ -259,6 +259,28 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
 .btn-dev-del:hover{color:var(--err);border-color:#fca5a5;}
 .dev-empty{text-align:center;padding:30px;color:var(--txl);font-size:13px;}
  
+/* ── DELETE TENANT MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,31,58,.55);backdrop-filter:blur(3px);
+  z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;
+  animation:fadeUp .18s ease;
+}
+.modal-box{
+  background:var(--sur);border-radius:var(--rad);box-shadow:0 16px 48px rgba(13,43,78,.35);
+  padding:28px 24px;width:100%;max-width:420px;animation:slideUp .22s ease;
+}
+.modal-title{font-size:17px;font-weight:800;color:var(--err);display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--txs);margin-bottom:18px;line-height:1.6;}
+.modal-reason{width:100%;padding:10px 12px;border:2px solid var(--bdr);border-radius:var(--rads);font-size:13px;font-family:inherit;resize:vertical;min-height:80px;outline:none;background:var(--sur2);color:var(--txt);}
+.modal-reason:focus{border-color:var(--err);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
+.btn-modal-cancel{padding:9px 18px;background:var(--sur2);color:var(--txb);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-modal-del{padding:9px 18px;background:var(--err);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-modal-del:hover{opacity:.9;}
+/* Delete button in tenant card */
+.btn-tenant-del{padding:5px 11px;background:var(--err-bg);border:1.5px solid #fca5a5;border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--err);}
+.btn-tenant-del:hover{background:#fee2e2;}
+ 
 /* Tenant filter for device table */
 .tenant-filter-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .tf-label{font-size:11px;font-weight:700;color:var(--txl);letter-spacing:.5px;text-transform:uppercase;}
@@ -428,6 +450,21 @@ html,body{font-family:'Noto Sans JP','Sora',sans-serif;background:var(--bg);colo
  
 <div id="toast"></div>
  
+<!-- ══ DELETE TENANT MODAL ══ -->
+<div class="modal-overlay" id="deleteTenantModal" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal-box">
+    <div class="modal-title">🗑️ テナントを削除</div>
+    <div class="modal-sub" id="deleteTenantMsg">このテナントを削除しますか？<br>この操作は元に戻せません。関連するデバイスデータは残ります。</div>
+    <label style="font-size:11px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">削除理由 <span style="color:var(--err);">*必須</span></label>
+    <textarea class="modal-reason" id="deleteTenantReason" placeholder="例：契約終了、利用停止のため…"></textarea>
+    <div id="deleteReasonErr" style="font-size:11.5px;color:var(--err);margin-top:4px;display:none;">⚠️ 削除理由を入力してください</div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">キャンセル</button>
+      <button class="btn-modal-del" onclick="confirmDeleteTenant()">🗑️ 削除する</button>
+    </div>
+  </div>
+</div>
+ 
 <!-- ══════════════════════════════════════════
    JAVASCRIPT
 ══════════════════════════════════════════ -->
@@ -473,24 +510,51 @@ let _regUnsub = null;
 function subscribeRegistrations(){
   _waitFb(() => {
     const col = window._fs.collection(window._db, 'registrations');
-    _regUnsub = window._fs.onSnapshot(
-      window._fs.query(col, window._fs.orderBy('ts', 'desc')),
-      snap => {
-        const prev = _allRegs.map(r => r.tenantId);
-        _allRegs = snap.docs.map(d => ({...d.data(), _docId: d.id}));
  
-        // Notify new pending registrations
-        _allRegs.forEach(r => {
-          if(r.status === 'pending' && !prev.includes(r.tenantId) && prev.length > 0){
-            notifyNewRegistration(r);
+    const attach = (q) => {
+      _regUnsub = window._fs.onSnapshot(
+        q,
+        snap => {
+          const prev = _allRegs.map(r => r.tenantId);
+          _allRegs = snap.docs.map(d => ({...d.data(), _docId: d.id}));
+          // Sort client-side as fallback
+          _allRegs.sort((a,b) => {
+            const ta = a.ts || a.registeredAt || 0;
+            const tb = b.ts || b.registeredAt || 0;
+            return String(tb).localeCompare(String(ta));
+          });
+ 
+          // Notify new pending registrations
+          _allRegs.forEach(r => {
+            if(r.status === 'pending' && !prev.includes(r.tenantId) && prev.length > 0){
+              notifyNewRegistration(r);
+            }
+          });
+ 
+          renderRegistrations();
+          updateRegBadge();
+        },
+        err => {
+          console.error('reg snapshot error', err);
+          // If orderBy failed (index missing), retry without orderBy
+          if(q !== col && (err.code === 'failed-precondition' || err.code === 'unimplemented' || String(err).includes('index'))){
+            console.warn('Retrying registrations without orderBy…');
+            if(_regUnsub) try{ _regUnsub(); }catch(e){}
+            attach(col);
+          } else {
+            const el = document.getElementById('regList');
+            if(el) el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--err);font-size:13px;">⚠️ データの読み込みに失敗しました。Firestoreインデックスを確認してください。</div>';
           }
-        });
+        }
+      );
+    };
  
-        renderRegistrations();
-        updateRegBadge();
-      },
-      err => console.error('reg snapshot error', err)
-    );
+    try {
+      attach(window._fs.query(col, window._fs.orderBy('ts', 'desc')));
+    } catch(e){
+      console.warn('query build failed, fallback:', e);
+      attach(col);
+    }
   });
 }
  
@@ -800,7 +864,8 @@ function subscribeAll(){
         if(newPending.length > 0){
           const t = _allTenants.find(t2 => t2.id === newPending[0].tenantId);
           const tName = t ? `${t.icon} ${t.name}` : newPending[0].tenantId;
-          notifyNewDevice(tName, newPending[0].label || '不明', newPending[0].deviceId);
+          const deviceDisplayName = parseDeviceName(newPending[0]);
+          notifyNewDevice(tName, deviceDisplayName, newPending[0].deviceId);
         }
       }
       _firstDeviceLoad = false;
@@ -969,6 +1034,7 @@ function renderTenants(){
       <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
         <button onclick="filterDevices('${t.id}',null)" style="padding:5px 11px;background:var(--sur2);border:1.5px solid var(--bdr);border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">📱 デバイスを見る</button>
         <button onclick="toggleTenantActive('${t.id}',${!t.active})" style="padding:5px 11px;background:${t.active?'var(--err-bg)':'var(--ok-bg)'};border:1.5px solid ${t.active?'#fca5a5':'#6ee7b7'};border-radius:var(--rads);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;color:${t.active?'var(--err)':'#065f46'};">${t.active ? '⏹ 無効化' : '▶ 有効化'}</button>
+        <button class="btn-tenant-del" onclick="openDeleteModal('${escHtml(t.id)}','${escHtml(t.name)}')">🗑️ 削除</button>
       </div>
     </div>`;
   }).join('');
@@ -1005,6 +1071,103 @@ async function savePin(tenantId){
       setSyncStatus('ok');
     } catch(e){ console.error(e); showToast('エラーが発生しました', 'error'); setSyncStatus('error'); }
   });
+}
+ 
+/* ══ DELETE TENANT MODAL ══ */
+let _deleteTargetId = null, _deleteTargetName = null;
+ 
+function openDeleteModal(tenantId, tenantName){
+  _deleteTargetId = tenantId;
+  _deleteTargetName = tenantName;
+  document.getElementById('deleteTenantMsg').innerHTML =
+    `<strong style="color:var(--navy);">「${escHtml(tenantName)}」(${escHtml(tenantId)})</strong> を完全に削除しますか？<br>この操作は元に戻せません。関連するデバイスデータは残ります。`;
+  document.getElementById('deleteTenantReason').value = '';
+  document.getElementById('deleteReasonErr').style.display = 'none';
+  document.getElementById('deleteTenantModal').style.display = 'flex';
+}
+ 
+function closeDeleteModal(){
+  document.getElementById('deleteTenantModal').style.display = 'none';
+  _deleteTargetId = null; _deleteTargetName = null;
+}
+ 
+async function confirmDeleteTenant(){
+  const reason = document.getElementById('deleteTenantReason').value.trim();
+  if(!reason){
+    document.getElementById('deleteReasonErr').style.display = 'block';
+    document.getElementById('deleteTenantReason').focus();
+    return;
+  }
+  document.getElementById('deleteReasonErr').style.display = 'none';
+  const tenantId = _deleteTargetId;
+  const tenantName = _deleteTargetName;
+  closeDeleteModal();
+  _waitFb(async () => {
+    try {
+      setSyncStatus('syncing');
+      // Archive deletion log before deleting
+      await window._fs.addDoc(window._fs.collection(window._db, 'deletedTenants'), {
+        tenantId, tenantName, reason, deletedAt: nowStr(), deletedBy: 'admin'
+      });
+      await window._fs.deleteDoc(window._fs.doc(window._db, 'tenants', tenantId));
+      showToast(`✅ テナント「${tenantName}」を削除しました`, 'ok');
+      setSyncStatus('ok');
+    } catch(e){ console.error(e); showToast('削除に失敗しました', 'error'); setSyncStatus('error'); }
+  });
+}
+ 
+/* ══ DEVICE NAME PARSER ══ */
+function parseDeviceName(d){
+  // Priority: stored deviceName > parse userAgent > label > unknown
+  if(d.deviceName) return d.deviceName;
+  const ua = d.userAgent || d.ua || '';
+  if(ua){
+    // iPhone model detection
+    const iphoneMatch = ua.match(/iPhone(?:\s*OS\s*([\d_]+))?/i);
+    if(iphoneMatch){
+      const osVer = iphoneMatch[1] ? iphoneMatch[1].replace(/_/g,'.') : '';
+      // Rough model mapping by OS version
+      if(osVer){
+        const major = parseInt(osVer.split('.')[0]);
+        if(major >= 18) return 'iPhone 16シリーズ';
+        if(major === 17) return 'iPhone 15シリーズ';
+        if(major === 16) return 'iPhone 14シリーズ';
+        if(major === 15) return 'iPhone 13シリーズ';
+        if(major === 14) return 'iPhone 12シリーズ';
+      }
+      return 'iPhone';
+    }
+    // iPad
+    if(/iPad/i.test(ua)) return 'iPad';
+    // Android device name
+    const androidMatch = ua.match(/\(Linux;.*?;\s*([^;)]+)\s+Build\//i);
+    if(androidMatch) return androidMatch[1].trim();
+    const androidSimple = ua.match(/Android[\s/][\d.]+;\s*([^)]+)\)/i);
+    if(androidSimple) return androidSimple[1].trim();
+    if(/Android/i.test(ua)) return 'Android端末';
+    // Mac / Windows
+    if(/Macintosh|Mac OS X/i.test(ua)) return 'Mac';
+    if(/Windows NT/i.test(ua)){
+      if(/Windows NT 10/i.test(ua)) return 'Windows 10/11 PC';
+      return 'Windows PC';
+    }
+    if(/Linux/i.test(ua)) return 'Linux PC';
+  }
+  return d.label || '不明';
+}
+ 
+function deviceNameHtml(d){
+  const name = parseDeviceName(d);
+  const label = d.label || '';
+  // Show icon based on device type
+  let icon = '💻';
+  if(/iphone/i.test(name)) icon = '📱';
+  else if(/ipad/i.test(name)) icon = '📱';
+  else if(/android/i.test(name)) icon = '📱';
+  else if(/mac/i.test(name)) icon = '🖥';
+  else if(/windows/i.test(name)) icon = '🖥';
+  const sub = (label && label !== name) ? `<div style="font-size:10.5px;color:var(--txl);margin-top:1px;">${escHtml(label)}</div>` : '';
+  return `<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:14px;">${icon}</span><div><div style="font-weight:600;color:var(--navy);font-size:12.5px;">${escHtml(name)}</div>${sub}</div></div>`;
 }
  
 /* ══ TENANT ACTIVE TOGGLE ══ */
@@ -1124,7 +1287,7 @@ function renderDeviceTable(){
         return `<tr>
           <td><span style="font-size:12px;font-weight:700;">${escHtml(tName)}</span></td>
           <td><span class="dev-id-chip">${escHtml(d.deviceId)}</span></td>
-          <td style="font-weight:600;color:var(--navy);">${escHtml(d.label || '不明')}</td>
+          <td>${deviceNameHtml(d)}</td>
           <td style="font-size:12px;">${escHtml(d.userName || d.userId || '—')}</td>
           <td style="font-size:11.5px;color:var(--txs);">${escHtml(d.lastSeen || '—')}</td>
           <td>${stHtml(d)}</td>
